@@ -271,6 +271,10 @@ def inventory_page():
 def maintenance_page():
     return render_template("maintenance.html")
 
+@app.route("/quotation")
+def quotation_page():
+    return render_template("quotation.html")
+
 @app.route("/sales")
 def sales_page():
     return render_template("sales_funnel.html")

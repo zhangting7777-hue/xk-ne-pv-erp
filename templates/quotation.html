@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>鑫科新能源光伏自动报价系统</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--xk-blue:#0C447C;--xk-blue2:#185FA5;--xk-green:#1D9E75;--xk-green2:#0F6E56;--xk-light:#E6F1FB;--xk-glight:#E1F5EE}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:13px;color:#333;background:#f4f7f9;padding:16px}
+.layout{display:grid;grid-template-columns:400px 1fr;gap:16px;border-radius:12px;overflow:hidden;min-height:780px;background:transparent}
+
+/* 左侧面板样式 */
+.left-panel{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);display:flex;flex-direction:column;overflow:hidden;border:1px solid #e1e8ed}
+.panel-head{background:var(--xk-blue);color:#fff;padding:16px}
+.panel-head .t{font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px}
+.panel-head .s{font-size:12px;opacity:.8;margin-top:4px}
+.project-fields{padding:16px;border-bottom:1px solid #f0f0f0;background:#fafbfc}
+.pf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.pf-row:last-child{margin-bottom:0}
+.pf-item{display:flex;flex-direction:column;gap:5px}
+.pf-item label{font-size:11px;color:#555;font-weight:600}
+.pf-item input,.pf-item select{font-size:13px;padding:8px 10px;border:1px solid #d9e2ec;border-radius:6px;background:#fff;color:#102a43;height:34px;width:100%;transition:border 0.2s}
+.pf-item input:focus,.pf-item select:focus{outline:none;border-color:var(--xk-blue)}
+.pf-full{grid-column:1/-1}
+
+.items-area{flex:1;overflow-y:auto;padding:16px}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;margin-top:16px;padding-bottom:6px;border-bottom:1px solid #eee}
+.section-hdr:first-child{margin-top:0}
+.sec-label{font-size:13px;font-weight:700;color:var(--xk-blue)}
+.add-btn{font-size:12px;color:var(--xk-green);cursor:pointer;border:1px solid var(--xk-green);border-radius:20px;padding:4px 10px;background:none;font-weight:600;transition:all 0.2s}
+.add-btn:hover{background:var(--xk-glight)}
+.item-row{display:grid;grid-template-columns:1fr 70px 70px 24px;gap:6px;margin-bottom:6px;align-items:center}
+.item-row input{font-size:12px;padding:6px 8px;border:1px solid #d9e2ec;border-radius:6px;height:30px;width:100%}
+.item-row input:focus{outline:none;border-color:var(--xk-blue)}
+.del-btn{color:#E24B4A;cursor:pointer;font-size:18px;background:none;border:none;text-align:center;transition:transform 0.2s}
+.del-btn:hover{transform:scale(1.2)}
+.col-heads{display:grid;grid-template-columns:1fr 70px 70px 24px;gap:6px;margin-bottom:6px}
+.col-heads span{font-size:11px;color:#666;font-weight:500;padding-left:2px}
+
+.totals-bar{padding:16px;border-top:1px solid #eee;background:#fafbfc}
+.total-line{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.total-line .tl{font-size:12px;color:#555}
+.total-line .tv{font-size:13px;font-weight:600;color:#333}
+.total-line input{width:55px;height:24px;font-size:12px;padding:0 4px;border:1px solid #ccc;border-radius:4px;text-align:center;margin:0 4px}
+.grand-line{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--xk-blue);border-radius:8px;margin-top:10px}
+.grand-line .gl{font-size:13px;color:#fff;font-weight:600}
+.grand-line .gv{font-size:18px;color:#fff;font-weight:700}
+.unit-line{display:flex;justify-content:space-between;margin-top:8px;padding:0 4px}
+.unit-line span{font-size:12px;color:#666}
+.unit-line b{font-size:13px;color:var(--xk-green);font-weight:700}
+
+.action-bar{padding:14px 16px;border-top:1px solid #eee;background:#fff}
+.exp-btn{width:100%;padding:10px;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.exp-btn.dl-btn{background:var(--xk-blue2);margin-bottom:8px}
+.exp-btn.dl-btn:hover{background:var(--xk-blue)}
+.exp-btn.pr-btn{background:var(--xk-green)}
+.exp-btn.pr-btn:hover{background:var(--xk-green2)}
+
+/* 右侧面板样式 */
+.right-panel{background:transparent;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);border:1px solid #e1e8ed}
+.preview-head{background:var(--xk-blue2);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+.preview-head .t{font-size:14px;font-weight:600}
+.live-tag{font-size:11px;background:var(--xk-green);color:#fff;padding:3px 10px;border-radius:12px;font-weight:500}
+.preview-scroll{flex:1;overflow-y:auto;padding:24px;background:#fff;max-height:850px}
+
+/* 内部文档样式 */
+.doc{background:#fff;border:1px solid #eaeaea;border-radius:8px;overflow:hidden;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,0.04);margin:0 auto;max-width:800px}
+.doc-header{background:var(--xk-blue);color:#fff;padding:20px 24px 16px}
+.doc-logo-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.logo-box{background:#fff;border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:4px}
+.logo-xk{font-size:18px;font-weight:800;color:var(--xk-blue);letter-spacing:-1px}
+.logo-leaf{color:var(--xk-green);font-size:18px}
+.logo-name{font-size:13px;color:var(--xk-blue);font-weight:700}
+.co-name{font-size:13px;opacity:.8;letter-spacing:0.5px}
+.doc-title{font-size:22px;font-weight:800;line-height:1.4;margin:8px 0 6px}
+.doc-subtitle{font-size:12px;opacity:.8}
+.doc-mode-bar{background:var(--xk-green);color:#fff;padding:8px 24px;font-size:13px;font-weight:600;letter-spacing:0.5px}
+.doc-body{padding:20px 24px}
+
+/* 核心防截断：确保 PDF 导出时各个区块不会在中间被切断 */
+.sec-block{margin-bottom:20px;page-break-inside:avoid;break-inside:avoid}
+
+.sec-title-bar{background:var(--xk-blue);color:#fff;padding:6px 14px;border-radius:4px;font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.kpi-box{border:1px solid #e0eaf5;border-radius:6px;padding:12px 8px;text-align:center;background:#fafcfd}
+.kpi-box .kl{font-size:11px;color:#666;margin-bottom:6px;line-height:1.3;font-weight:500}
+.kpi-box .kv{font-size:16px;font-weight:800;color:var(--xk-blue)}
+.kpi-box.hi .kv{color:var(--xk-green)}
+.detail-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.detail-tbl th{background:var(--xk-light);color:var(--xk-blue);padding:8px 10px;text-align:left;border:1px solid #cce0f0;font-weight:600}
+.detail-tbl th:last-child,.detail-tbl td:last-child{text-align:right}
+.detail-tbl td{padding:8px 10px;border:1px solid #e8e8e8;color:#222}
+.detail-tbl .mod-row td{background:#f0f7ff;font-weight:600;color:var(--xk-blue);font-size:11px}
+.detail-tbl .sub-row td{background:var(--xk-glight);font-weight:600;color:var(--xk-green2)}
+.detail-tbl .grand-row td{background:var(--xk-blue);color:#fff;font-weight:700;font-size:13px;padding:10px}
+.adv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.adv-box{border:1px solid #d0f0e8;border-radius:6px;padding:14px 10px;text-align:center;background:#fafffd}
+.adv-box .ai{font-size:24px;color:var(--xk-green);margin-bottom:6px}
+.adv-box .at{font-size:13px;font-weight:700;color:var(--xk-blue);margin-bottom:4px}
+.adv-box .as{font-size:11px;color:#666;line-height:1.5}
+.effect-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.effect-tbl th{background:var(--xk-blue);color:#fff;padding:8px 10px;text-align:center;font-weight:500}
+.effect-tbl td{padding:8px 10px;border:1px solid #e8e8e8;text-align:center;color:#222}
+.effect-tbl .hi-row td{font-weight:700;color:#E24B4A;background:#fff8f8}
+.contact-bar{background:#f8f9fa;border-top:1px solid #eee;padding:16px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:11px;page-break-inside:avoid;break-inside:avoid}
+.contact-col .ct{font-weight:700;color:var(--xk-blue);margin-bottom:4px}
+.contact-col .cv{color:#444;line-height:1.4}
+.doc-footer{background:var(--xk-blue);color:#fff;text-align:center;padding:10px;font-size:12px;letter-spacing:0.2em;font-weight:500}
+
+@media (max-width: 900px) {
+  body { padding: 0; }
+  .layout { grid-template-columns: 1fr; gap: 0; border-radius: 0; }
+  .left-panel { border-radius: 0; border: none; border-bottom: 2px solid #ddd; }
+  .right-panel { border-radius: 0; border: none; }
+  .preview-scroll { max-height: none; padding: 12px; }
+  .kpi-grid, .adv-grid { grid-template-columns: 1fr 1fr; }
+  .contact-bar { grid-template-columns: 1fr; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<div class="left-panel">
+  <div class="panel-head">
+    <div class="t">报价参数编辑</div>
+    <div class="s">修改任意参数，右侧报价单实时更新</div>
+  </div>
+
+  <div class="project-fields">
+    <div class="pf-row">
+      <div class="pf-item pf-full">
+        <label>客户/业主单位</label>
+        <input id="f_owner" value="泉兴机械厂" oninput="render()">
+      </div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-item"><label>项目地址</label><input id="f_addr" value="福建省福州市" oninput="render()"></div>
+      <div class="pf-item"><label>报价编号</label><input id="f_qno" value="XK-2026-002" oninput="render()"></div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-item"><label>合作模式</label>
+        <select id="f_mode" onchange="render()">
+          <option value="epc">EPC总承包（客户投资）</option>
+          <option value="emc" selected>EMC能源管理（我司投资）</option>
+        </select>
+      </div>
+      <div class="pf-item"><label>装机容量（kW）</label><input id="f_cap" type="number" value="240" min="1" oninput="render()"></div>
+    </div>
+    
+    <div class="pf-row" id="emc_discount_box" style="display:flex;">
+      <div class="pf-item">
+        <label style="color:var(--xk-green)">EMC 收益模式</label>
+        <select id="f_emc_type" onchange="toggleEmcFields(); render();">
+          <option value="discount" selected>比例折扣 (%)</option>
+          <option value="fixed">固定电价 (元/度)</option>
+        </select>
+      </div>
+      <div class="pf-item" id="emc_discount_input_box">
+        <label style="color:var(--xk-green)">业主享电费折扣 (%)</label>
+        <input id="f_emc_discount" type="number" value="15" step="1" min="1" max="100" oninput="render()">
+      </div>
+      <div class="pf-item" id="emc_fixed_input_box" style="display:none;">
+        <label style="color:var(--xk-green)">协议固定电价 (元/度)</label>
+        <input id="f_emc_fixed" type="number" value="0.45" step="0.01" min="0" oninput="render()">
+      </div>
+    </div>
+
+    <div class="pf-row">
+      <div class="pf-item"><label>原自用市电价（元/度）</label><input id="f_selfp" type="number" value="0.73" step="0.01" oninput="render()"></div>
+      <div class="pf-item"><label>上网电价（元/度）</label><input id="f_tariff" type="number" value="0.379" step="0.001" oninput="render()"></div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-item"><label>年利用小时（h）</label><input id="f_hrs" type="number" value="1100" oninput="render()"></div>
+      <div class="pf-item"><label>自用比例 (0-1)</label><input id="f_ratio" type="number" value="0.80" step="0.05" min="0" max="1" oninput="render()"></div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-item"><label>联系人</label><input id="f_contact" value="张挺" oninput="render()"></div>
+      <div class="pf-item"><label>联系电话</label><input id="f_phone" value="18367911260" oninput="render()"></div>
+    </div>
+  </div>
+
+  <div class="items-area" id="items-area"></div>
+
+  <div class="totals-bar">
+    <div class="total-line"><span class="tl">直接成本小计</span><span class="tv" id="t_direct">—</span></div>
+    <div class="total-line"><span class="tl">管理费 <input type="number" id="t_mgt" value="0.06" min="0" step="0.01" oninput="render()">元/W</span><span class="tv" id="t_mgt_amt">—</span></div>
+    <div class="total-line"><span class="tl">增值税税费 <input type="number" id="t_vat" value="0.18" min="0" step="0.01" oninput="render()">元/W</span><span class="tv" id="t_vat_amt">—</span></div>
+    <div class="total-line"><span class="tl">合理利润 <input type="number" id="t_prf" value="0.10" min="0" step="0.01" oninput="render()">元/W</span><span class="tv" id="t_prf_amt">—</span></div>
+    <div class="grand-line">
+      <span class="gl" id="t_grand_lbl">项目总造价</span>
+      <span class="gv" id="t_grand">¥ 0</span>
+    </div>
+    <div class="unit-line">
+      <span id="t_unit">综合单价 —</span>
+      <b id="t_payback">回收期 —</b>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="exp-btn dl-btn" onclick="downloadDirectPDF()">⚡ 直接下载 PDF 报价单</button>
+    <button class="exp-btn pr-btn" onclick="exportDoc()">🖨️ 浏览器打印 / 另存为 PDF</button>
+  </div>
+</div>
+
+<div class="right-panel">
+  <div class="preview-head">
+    <span class="t">报价单预览</span>
+    <span class="live-tag">实时同步计算</span>
+  </div>
+  <div class="preview-scroll">
+    <div class="doc" id="doc-preview"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const SECTIONS=[
+  {key:'equipment',label:'一、光伏核心设备',items:[
+    {name:'高效TopCon N型组件（645W双玻）',up:0.83,brand:'晶科Tiger Neo'},
+    {name:'并网逆变器（组串式）',up:0.15,brand:'华为SUN2000-150K'},
+    {name:'光伏支架及夹具',up:0.99,brand:'锌铝镁'},
+  ]},
+  {key:'electrical',label:'二、电气系统设备',items:[
+    {name:'并网柜和反孤岛柜',up:0.05,brand:'川泉/正泰'},
+    {name:'直流线缆 PV1-F-4铜',up:0.06,brand:'玖开、上上'},
+    {name:'逆变器交流电缆 3×95+1×50',up:0.21,brand:'玖开、上上'},
+    {name:'T接交流电缆 3×240+1×120',up:0.08,brand:'玖开、上上'},
+    {name:'线缆桥架（锌铝镁）',up:0.02,brand:''},
+    {name:'安装辅材（接地、线管等）',up:0.02,brand:''},
+  ]},
+  {key:'monitor',label:'三、监控与智能系统',items:[
+    {name:'通讯调度设备（群调群控）',up:0.04,brand:'>400kW必配'},
+    {name:'谐波治理装置',up:0.03,brand:''},
+  ]},
+  {key:'om',label:'四、运维设施',items:[
+    {name:'运维检修通道及PE管',up:0.01,brand:'含喷淋清洗'},
+    {name:'组件积灰导水装置（304不锈）',up:0.01,brand:''},
+  ]},
+  {key:'service',label:'五、施工与设计服务',items:[
+    {name:'光伏安装施工（含吊装、接线）',up:0.27,brand:''},
+    {name:'电力申请及并网验收',up:0.01,brand:''},
+    {name:'现场勘查及施工图设计',up:0.02,brand:''},
+    {name:'施工责任一切险',up:0.02,brand:''},
+    {name:'建设工程设计费',up:0.02,brand:''},
+  ]},
+];
+
+let state={sections:JSON.parse(JSON.stringify(SECTIONS))};
+
+function gv(id){return document.getElementById(id)?.value||''}
+function gn(id){return parseFloat(document.getElementById(id)?.value)||0}
+function fmt(n){return '¥'+Math.round(n).toLocaleString('zh-CN')}
+function fmtW(n){return n.toFixed(2)} 
+
+function toggleEmcFields() {
+  const type = gv('f_emc_type');
+  const discBox = document.getElementById('emc_discount_input_box');
+  const fixedBox = document.getElementById('emc_fixed_input_box');
+  if (discBox && fixedBox) {
+    if (type === 'discount') {
+      discBox.style.display = 'flex';
+      fixedBox.style.display = 'none';
+    } else {
+      discBox.style.display = 'none';
+      fixedBox.style.display = 'flex';
+    }
+  }
+}
+
+function buildItemsArea(){
+  const area=document.getElementById('items-area');
+  area.innerHTML='';
+  state.sections.forEach((sec,si)=>{
+    const hdr=document.createElement('div');
+    hdr.className='section-hdr';
+    hdr.innerHTML=`<span class="sec-label">${sec.label}</span><button class="add-btn" onclick="addItem(${si})">+ 增加项</button>`;
+    area.appendChild(hdr);
+    const cols=document.createElement('div');
+    cols.className='col-heads';
+    cols.innerHTML='<span>名称</span><span>单价(元/W)</span><span>品牌备注</span><span></span>';
+    area.appendChild(cols);
+    sec.items.forEach((it,ii)=>{
+      const row=document.createElement('div');
+      row.className='item-row';
+      row.innerHTML=`
+        <input value="${it.name}" placeholder="名称" oninput="updateItem(${si},${ii},'name',this.value)">
+        <input type="number" value="${it.up}" step="0.01" min="0" style="text-align:right" oninput="updateItem(${si},${ii},'up',parseFloat(this.value)||0)">
+        <input value="${it.brand||''}" placeholder="备注" oninput="updateItem(${si},${ii},'brand',this.value)">
+        <button class="del-btn" onclick="delItem(${si},${ii})" aria-label="删除">×</button>`;
+      area.appendChild(row);
+    });
+  });
+}
+
+function addItem(si){
+  state.sections[si].items.push({name:'新增项目',up:0,brand:''});
+  buildItemsArea();render();
+}
+function delItem(si,ii){
+  if(state.sections[si].items.length<=1)return;
+  state.sections[si].items.splice(ii,1);
+  buildItemsArea();render();
+}
+function updateItem(si,ii,key,val){
+  state.sections[si].items[ii][key]=val;
+  render();
+}
+
+function calcAll(){
+  const mode = gv('f_mode');
+  const cap = gn('f_cap') || 240;
+  const w = cap * 1000;
+  
+  const mgtVal = gn('t_mgt');
+  const vatVal = gn('t_vat');
+  const prfVal = gn('t_prf');
+
+  let secTotals = [];
+  let direct = 0;
+  state.sections.forEach(sec=>{
+    let s = 0;
+    sec.items.forEach(it=>{ s += it.up * w });
+    secTotals.push(s); direct += s;
+  });
+
+  const mgtAmt = w * mgtVal;
+  const vatAmt = w * vatVal;
+  const prfAmt = w * prfVal;
+  
+  const grand = direct + mgtAmt + vatAmt + prfAmt;
+  const unitW = grand / w;
+  
+  const annGen = cap * gn('f_hrs') * 0.82;
+  const selfRev = annGen * gn('f_ratio') * gn('f_selfp'); 
+  const gridRev = annGen * (1 - gn('f_ratio')) * gn('f_tariff');
+  const annRev = selfRev + gridRev; 
+
+  const pb = annRev > 0 ? grand / annRev : 0;
+  const cum25 = annRev * 25 * (1 - 0.005 * 12.5); 
+
+  let ownerAnnRev = annRev;
+  let ownerCum25 = cum25;
+  let ownerPb = pb;
+
+  if (mode === 'emc') {
+    const emcType = gv('f_emc_type');
+    if (emcType === 'discount') {
+      const emcDiscount = gn('f_emc_discount') / 100;
+      ownerAnnRev = selfRev * emcDiscount;
+    } else {
+      const selfPrice = gn('f_selfp');
+      const emcFixed = gn('f_emc_fixed');
+      const savingPerKwh = Math.max(0, selfPrice - emcFixed);
+      ownerAnnRev = annGen * gn('f_ratio') * savingPerKwh;
+    }
+    ownerCum25 = ownerAnnRev * 25 * (1 - 0.005 * 12.5);
+    ownerPb = 0; 
+  }
+
+  return {mode, cap, w, secTotals, direct, mgtAmt, vatAmt, prfAmt, grand, unitW, annGen, annRev, pb, cum25, mgtVal, vatVal, prfVal, ownerAnnRev, ownerCum25, ownerPb};
+}
+
+function updateTotals(d){
+  const emcBox = document.getElementById('emc_discount_box');
+  if (d.mode === 'emc') {
+    emcBox.style.display = 'flex';
+    toggleEmcFields();
+  } else {
+    emcBox.style.display = 'none';
+  }
+
+  document.getElementById('t_direct').textContent = fmt(d.direct);
+  document.getElementById('t_mgt_amt').textContent = fmt(d.mgtAmt);
+  document.getElementById('t_vat_amt').textContent = fmt(d.vatAmt);
+  document.getElementById('t_prf_amt').textContent = fmt(d.prfAmt);
+  document.getElementById('t_grand').textContent = fmt(d.grand);
+  document.getElementById('t_unit').textContent = '内部综合造价 ' + fmtW(d.unitW) + ' 元/W';
+  
+  if (d.mode === 'emc') {
+      document.getElementById('t_grand_lbl').textContent = '电站总造价(我方投资)';
+      document.getElementById('t_payback').innerHTML = `业主首年省电费 <b style="color:var(--xk-green);font-size:14px">¥${Math.round(d.ownerAnnRev).toLocaleString()}</b>`;
+  } else {
+      document.getElementById('t_grand_lbl').textContent = '项目总报价(客户投资)';
+      document.getElementById('t_payback').innerHTML = `预估回收期 <b style="color:var(--xk-green);font-size:14px">${d.pb.toFixed(1)} 年</b>`;
+  }
+}
+
+function buildDoc(d){
+  const owner = gv('f_owner') || '客户单位';
+  const addr = gv('f_addr');
+  const qno = gv('f_qno');
+  const isEMC = d.mode === 'emc';
+  const emcType = gv('f_emc_type');
+  
+  let modeLabel = 'EPC总承包报价方案';
+  if (isEMC) {
+    modeLabel = emcType === 'discount' 
+      ? 'EMC能源管理模式（享电费折价，我司全额投资）' 
+      : 'EMC能源管理模式（协议固定电价，我司全额投资）';
+  }
+
+  const contact = gv('f_contact');
+  const phone = gv('f_phone');
+  const today = new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});
+
+  let detailRows='';
+  state.sections.forEach((sec,si)=>{
+    detailRows+=`<tr class="mod-row"><td colspan="4">${sec.label}</td></tr>`;
+    sec.items.forEach(it=>{
+      const amt=it.up*d.w;
+      detailRows+=`<tr><td style="padding-left:16px">${it.name}</td><td>${it.brand||'—'}</td><td style="text-align:right">${fmtW(it.up)}</td><td style="text-align:right">¥${Math.round(amt).toLocaleString()}</td></tr>`;
+    });
+    detailRows+=`<tr class="sub-row"><td colspan="2">小计</td><td></td><td style="text-align:right">¥${Math.round(d.secTotals[si]).toLocaleString()}</td></tr>`;
+  });
+  
+  detailRows+=`<tr><td>管理费（按 ${d.mgtVal.toFixed(2)} 元/W 测算）</td><td colspan="2"></td><td style="text-align:right">¥${Math.round(d.mgtAmt).toLocaleString()}</td></tr>`;
+  detailRows+=`<tr><td>增值税税费（按 ${d.vatVal.toFixed(2)} 元/W 测算）</td><td colspan="2"></td><td style="text-align:right">¥${Math.round(d.vatAmt).toLocaleString()}</td></tr>`;
+  detailRows+=`<tr><td>合理利润（按 ${d.prfVal.toFixed(2)} 元/W 测算）</td><td colspan="2"></td><td style="text-align:right">¥${Math.round(d.prfAmt).toLocaleString()}</td></tr>`;
+  detailRows+=`<tr class="grand-row"><td colspan="2">项目系统总价值</td><td style="text-align:right">${fmtW(d.unitW)} 元/W</td><td style="text-align:right">¥${Math.round(d.grand).toLocaleString()}</td></tr>`;
+
+  let kpiDynamicRows = '';
+  if (isEMC) {
+      kpiDynamicRows = `
+        <div class="kpi-box"><div class="kl">业主总投资</div><div class="kv" style="font-size:14px;color:#333">¥0 (我司出资)</div></div>
+        <div class="kpi-box hi"><div class="kl">首年电费直接节省</div><div class="kv" style="font-size:15px">¥${Math.round(d.ownerAnnRev).toLocaleString()}</div></div>
+      `;
+  } else {
+      kpiDynamicRows = `
+        <div class="kpi-box"><div class="kl">总投资报价</div><div class="kv" style="font-size:14px">¥${(d.grand/10000).toFixed(1)}万</div></div>
+        <div class="kpi-box hi"><div class="kl">简单回收期</div><div class="kv" style="font-size:14px">${d.pb.toFixed(1)} 年</div></div>
+      `;
+  }
+
+  const pcts=[50,70,100];
+  let effRows='';
+  const selfPrice = gn('f_selfp');
+
+  pcts.forEach(p=>{
+    const gen=(d.cap*gn('f_hrs')*0.82*p/100/10000).toFixed(2);
+    const selfR=(d.cap*gn('f_hrs')*0.82*(p/100)*Math.min(gn('f_ratio'),p/100)*selfPrice/10000);
+    const gridR=(d.cap*gn('f_hrs')*0.82*(p/100)*Math.max(0,p/100-gn('f_ratio'))*gn('f_tariff')/10000);
+    
+    let rev = 0;
+    if (isEMC) {
+        if (emcType === 'discount') {
+            const emcDiscount = gn('f_emc_discount') / 100;
+            rev = (selfR * emcDiscount).toFixed(2);
+        } else {
+            const emcFixed = gn('f_emc_fixed');
+            const savingPerKwh = Math.max(0, selfPrice - emcFixed);
+            rev = selfPrice > 0 ? (selfR * (savingPerKwh / selfPrice)).toFixed(2) : '0.00';
+        }
+    } else {
+        rev = (selfR + gridR).toFixed(2);
+    }
+    effRows+=`<tr><td>${p}%</td><td>${gen}</td><td>${rev}</td></tr>`;
+  });
+  const cum25w=(d.ownerCum25/10000).toFixed(1);
+  effRows+=`<tr class="hi-row"><td>平均消纳80%，25年总节省/收益（万元）</td><td colspan="2">${cum25w}</td></tr>`;
+
+  let priceNote = '';
+  if (isEMC) {
+    if (emcType === 'discount') {
+      const emcDiscount = gn('f_emc_discount');
+      priceNote = `<p style="color:#555;font-size:12px;line-height:1.7;margin:0">本项目建议采用 <b>EMC能源管理模式</b>，由我司（鑫科新能源）全额投资建设电站，业主方<b style="color:var(--xk-blue)">零投入、零风险、零运维</b>，仅需提供闲置屋顶。电站并网后，业主企业自发自用部分电量，即可按市电的 <b>${emcDiscount.toFixed(0)}% 折扣</b> 直接享受电费节省收益。项目合作周期25年，期间所有光伏设备维护及更换费用均由我司承担。</p>`;
+    } else {
+      const emcFixed = gn('f_emc_fixed');
+      const diffPrice = Math.max(0, selfPrice - emcFixed);
+      priceNote = `<p style="color:#555;font-size:12px;line-height:1.7;margin:0">本项目建议采用 <b>EMC能源管理模式</b>，由我司（鑫科新能源）全额投资建设电站，业主方<b style="color:var(--xk-blue)">零投入、零风险、零运维</b>，仅需提供闲置屋顶。电站并网后，业主企业协议自用电价固定为 <b>${emcFixed.toFixed(2)} 元/度</b>（相比原市电电价 ${selfPrice.toFixed(2)} 元/度，每度电可固定节省 <b>${diffPrice.toFixed(2)} 元</b>），直接享受稳定降本收益。项目合作周期25年，期间所有光伏设备维护及更换费用均由我司承担。</p>`;
+    }
+  } else {
+    priceNote = `<p style="color:#555;font-size:12px;line-height:1.7;margin:0">本项目采用 <b>EPC总承包模式</b>，由贵方全额投资，我司提供方案设计、设备采购、工程施工、并网验收全流程交钥匙服务。配置规范化税费进项抵扣。电站建成后产权及全部发电收益归业主方所有。</p>`;
+  }
+
+  document.getElementById('doc-preview').innerHTML=`
+<div class="doc-header">
+  <div class="doc-logo-row">
+    <div class="logo-box"><span class="logo-xk">XKNE</span><span class="logo-leaf">✦</span><span class="logo-name">鑫科新能源</span></div>
+    <span class="co-name">Xin Ke New Energy</span>
+  </div>
+  <div class="doc-title">${owner}屋顶分布式光伏项目<br>建议书</div>
+  <div class="doc-subtitle">${addr} &nbsp;|&nbsp; ${today} &nbsp;|&nbsp; 编号：${qno}</div>
+</div>
+<div class="doc-mode-bar">${modeLabel}</div>
+<div class="doc-body">
+
+<div class="sec-block">
+  <div class="sec-title-bar"> 一、项目概况及合作模式</div>
+  ${priceNote}
+</div>
+
+<div class="sec-block">
+  <div class="sec-title-bar"> 二、核心收益参数表</div>
+  <div class="kpi-grid">
+    <div class="kpi-box"><div class="kl">装机容量（千瓦）</div><div class="kv">${d.cap}</div></div>
+    <div class="kpi-box"><div class="kl">系统造价水平（元/瓦）</div><div class="kv">${fmtW(d.unitW)}</div></div>
+    <div class="kpi-box"><div class="kl">首年发电量（万度）</div><div class="kv">${(d.annGen/10000).toFixed(2)}</div></div>
+    <div class="kpi-box hi"><div class="kl">业主25年总节省（万元）</div><div class="kv">${(d.ownerCum25/10000).toFixed(1)}</div></div>
+  </div>
+  <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0">
+    ${kpiDynamicRows}
+  </div>
+</div>
+
+${isEMC?`
+<div class="sec-block">
+  <div class="sec-title-bar"> 三、EMC模式四大核心优势</div>
+  <div class="adv-grid">
+    <div class="adv-box"><div class="ai">💰</div><div class="at">企业零投入</div><div class="as">我司全额出资建设电站，盘活闲置屋顶资产</div></div>
+    <div class="adv-box"><div class="ai">🛡️</div><div class="at">企业零风险</div><div class="as">项目合规、建设、并网风险均由鑫科承担</div></div>
+    <div class="adv-box"><div class="ai">🔧</div><div class="at">企业零运维</div><div class="as">全生命周期内设备损坏、清洗维护皆由我司负责</div></div>
+    <div class="adv-box"><div class="ai">📈</div><div class="at">稳定降本增效</div><div class="as">不花一分钱，每月固定降低企业刚性电费支出</div></div>
+  </div>
+</div>`:''}
+
+<div class="sec-block">
+  <div class="sec-title-bar"> ${isEMC?'四':'三'}、设备选型及系统配置价值明细</div>
+  <p style="font-size:11px;color:#888;margin-bottom:6px">注：本表旨在明示我方将向该项目投入的系统设备级别与工程造价标准。</p>
+  <table class="detail-tbl">
+    <thead><tr><th style="width:38%">系统名称</th><th style="width:22%">品牌/说明</th><th style="width:18%;text-align:right">测算单价</th><th style="width:22%;text-align:right">测算金额</th></tr></thead>
+    <tbody>${detailRows}</tbody>
+  </table>
+</div>
+
+<div class="sec-block" style="${!isEMC ? 'margin-bottom:0' : ''}">
+  <div class="sec-title-bar"> ${isEMC?'五':'四'}、业主方实际效益敏感性分析表</div>
+  <table class="effect-tbl">
+    <thead><tr><th>企业自用电比例</th><th>年度绿电发电量（万度）</th><th>${isEMC?'业主年度节省电费':'业主总收益金额'}（万元）</th></tr></thead>
+    <tbody>${effRows}</tbody>
+  </table>
+</div>
+
+${isEMC?`
+<div class="sec-block" style="margin-bottom:0">
+  <div class="sec-title-bar"> 六、项目合作周期说明</div>
+  <p style="font-size:12px;color:#555;line-height:1.7">项目合作基准周期为 <b>25年</b>，合同期内我司负责电站的投资、建设、运营、维护。期满后，电站系统及其衍生收益无偿赠予业主方。</p>
+</div>`:''}
+
+</div>
+
+<div class="contact-bar">
+  <div class="contact-col"><div class="ct">厦门运营中心</div><div class="cv">集美区杏林湾运营中心11#2501室</div></div>
+  <div class="contact-col"><div class="ct">福州运营中心</div><div class="cv">仓山区建新北路奋安中心3#1203室</div></div>
+  <div class="contact-col"><div class="ct">商务联系人：${contact}</div><div class="cv">联系电话：${phone}</div></div>
+</div>
+<div class="doc-footer">鑫科新能源 &nbsp;&nbsp; 绿色能源 &nbsp;&nbsp; 驱动未来</div>`;
+}
+
+function render(){
+  const d=calcAll();
+  updateTotals(d);
+  buildDoc(d);
+}
+
+// 选项 1：⚡ 一键直接下载 PDF 报价单 (使用高效 html2pdf 解决空白与缺页)
+function downloadDirectPDF(){
+  const element = document.getElementById('doc-preview');
+  const owner = gv('f_owner') || '客户单位';
+  const qno = gv('f_qno') || '报价单';
+  
+  const opt = {
+    margin:       [12, 12, 12, 12], // 完美的四周页边距保持大气排版
+    filename:     `鑫科新能源-${owner}-${qno}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { 
+      scale: 2,          // 确保文字和高清Logo不模糊
+      useCORS: true,     // 跨域资源兼容
+      scrollY: 0,
+      scrollX: 0
+    },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // 规避切断现象
+  };
+  
+  // 执行下载流
+  html2pdf().set(opt).from(element).save();
+}
+
+// 选项 2：🖨️ 呼起浏览器打印窗 (可手动选择另存为PDF)
+function exportDoc(){
+  const preview=document.getElementById('doc-preview').innerHTML;
+  const win=window.open('','_blank','width=820,height=900');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>鑫科新能源光伏项目建议书</title>
+  <style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  body{background:#f0f0f0;padding:20px}
+  .doc{max-width:760px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden;font-size:12px}
+  .doc-header{background:#0C447C;color:#fff;padding:20px 24px 16px}
+  .doc-logo-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .logo-box{background:#fff;border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:4px}
+  .logo-xk{font-size:18px;font-weight:800;color:#0C447C;letter-spacing:-1px}
+  .logo-leaf{color:#1D9E75;font-size:18px}
+  .logo-name{font-size:13px;color:#0C447C;font-weight:700}
+  .co-name{font-size:13px;opacity:.8}
+  .doc-title{font-size:22px;font-weight:800;line-height:1.4;margin:8px 0 6px}
+  .doc-subtitle{font-size:12px;opacity:.8}
+  .doc-mode-bar{background:#1D9E75;color:#fff;padding:8px 24px;font-size:13px;font-weight:600}
+  .doc-body{padding:20px 24px}
+  .sec-block{margin-bottom:20px;page-break-inside:avoid;break-inside:avoid}
+  .sec-title-bar{background:#0C447C;color:#fff;padding:6px 14px;border-radius:4px;font-size:13px;font-weight:600;margin-bottom:12px}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+  .kpi-box{border:1px solid #d0e8f5;border-radius:6px;padding:12px 8px;text-align:center}
+  .kpi-box .kl{font-size:11px;color:#666;margin-bottom:6px;font-weight:500}
+  .kpi-box .kv{font-size:16px;font-weight:800;color:#0C447C}
+  .kpi-box.hi .kv{color:#1D9E75}
+  .adv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+  .adv-box{border:1px solid #d0f0e8;border-radius:6px;padding:14px 10px;text-align:center}
+  .adv-box .ai{font-size:24px;color:#1D9E75;margin-bottom:6px}
+  .adv-box .at{font-size:13px;font-weight:700;color:#0C447C;margin-bottom:4px}
+  .adv-box .as{font-size:11px;color:#666;line-height:1.5}
+  .detail-tbl,.effect-tbl{width:100%;border-collapse:collapse;font-size:12px}
+  .detail-tbl th,.effect-tbl th{background:#E6F1FB;color:#0C447C;padding:8px 10px;text-align:left;border:1px solid #cce0f0;font-weight:600}
+  .detail-tbl th:last-child,.detail-tbl td:last-child{text-align:right}
+  .detail-tbl td,.effect-tbl td{padding:8px 10px;border:1px solid #e8e8e8;color:#222}
+  .detail-tbl .mod-row td{background:#f0f7ff;font-weight:600;color:#0C447C;font-size:11px}
+  .detail-tbl .sub-row td{background:#E1F5EE;font-weight:600;color:#0F6E56}
+  .detail-tbl .grand-row td{background:#0C447C;color:#fff;font-weight:700;font-size:13px;padding:10px}
+  .effect-tbl th{text-align:center}.effect-tbl td{text-align:center}
+  .hi-row td{font-weight:700;color:#C00;background:#fff8f8}
+  .contact-bar{background:#f8f9fa;border-top:1px solid #eee;padding:16px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:11px;page-break-inside:avoid;break-inside:avoid}
+  .contact-col .ct{font-weight:700;color:#0C447C;margin-bottom:4px}
+  .contact-col .cv{color:#444;line-height:1.4}
+  .doc-footer{background:#0C447C;color:#fff;text-align:center;padding:10px;font-size:12px;letter-spacing:0.2em;font-weight:500}
+  @media print{body{padding:0;background:#fff}.doc{border-radius:0;box-shadow:none;border:none}}
+  </style></head><body><div class="doc">${preview}</div></body></html>`);
+  win.document.close();win.focus();
+  setTimeout(()=>win.print(),700);
+}
+
+buildItemsArea();render();
+</script>
+</body>
+</html>
