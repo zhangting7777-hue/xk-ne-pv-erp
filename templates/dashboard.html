@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}经营看板 - 鑫科新能源ERP{% endblock %}
+{% block page %}
+<div class="page-title">📊 老板经营看板</div>
+
+<!-- 核心指标卡片 -->
+<div class="metric-grid" id="metricGrid"></div>
+
+<!-- 分栏：资金趋势 + 预警 -->
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">💰 近6个月资金趋势</div>
+    <div class="chart-area" id="fundChart"></div>
+    <div style="display:flex;gap:20px;margin-top:16px;font-size:12px">
+      <span>🟢 收入</span><span>🔵 支出</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔴 预警项目（未并网+垫资较大）</div>
+    <table class="data-table">
+      <thead><tr><th>项目名称</th><th>状态</th><th>总投资(万)</th><th>剩余未付(万)</th></tr></thead>
+      <tbody id="overdueTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 项目垫资排行 + 项目状态分布 -->
+<div class="two-col" style="margin-top:16px">
+  <div class="card">
+    <div class="card-title">🏆 项目垫资排行 TOP10</div>
+    <table class="data-table">
+      <thead><tr><th>#</th><th>项目名称</th><th>总投资(万)</th><th>已付(万)</th><th>剩余(万)</th></tr></thead>
+      <tbody id="topProjTable"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title">📈 项目状态分布</div>
+    <div id="statusDist"></div>
+  </div>
+</div>
+
+<!-- 电费回收情况 -->
+<div class="card" style="margin-top:16px">
+  <div class="card-title">⚡ 电费回收情况</div>
+  <div style="display:flex;gap:30px;align-items:center">
+    <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="metric-card"><div class="mlabel">累计电费应收</div><div class="mvalue" id="ebill-total">-</div><div class="munit">万元</div></div>
+      <div class="metric-card green"><div class="mlabel">已回款</div><div class="mvalue" id="ebill-paid">-</div><div class="munit">万元</div></div>
+      <div class="metric-card red"><div class="mlabel">未回款</div><div class="mvalue" id="ebill-unpaid">-</div><div class="munit">万元</div></div>
+    </div>
+    <div style="flex:1">
+      <div id="ebill-bar" class="progress-bar" style="height:20px"><div class="progress-fill" id="ebill-fill" style="background:var(--xk-green)"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-top:4px">
+        <span>0%</span><span id="ebill-pct">0%</span><span>100%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadDashboard(){
+  const r = await fetch('/api/dashboard/summary');
+  const d = await r.json();
+
+  document.getElementById('metricGrid').innerHTML = `
+    <div class="metric-card"><div class="mlabel">总项目数</div><div class="mvalue">${d.total_projects}</div><div class="munit">个</div></div>
+    <div class="metric-card green"><div class="mlabel">已并网项目</div><div class="mvalue">${d.grid_projects}</div><div class="munit">个</div></div>
+    <div class="metric-card"><div class="mlabel">总装机容量</div><div class="mvalue">${d.total_cap}</div><div class="munit">kW</div></div>
+    <div class="metric-card"><div class="mlabel">总投资额</div><div class="mvalue">${d.total_invest}</div><div class="munit">万元</div></div>
+    <div class="metric-card blue"><div class="mlabel">已付款</div><div class="mvalue">${d.total_paid}</div><div class="munit">万元</div></div>
+    <div class="metric-card orange"><div class="mlabel">剩余未付</div><div class="mvalue">${d.total_remain}</div><div class="munit">万元</div></div>
+    <div class="metric-card green"><div class="mlabel">累计收入</div><div class="mvalue">${d.income}</div><div class="munit">万元</div></div>
+    <div class="metric-card red"><div class="mlabel">累计支出</div><div class="mvalue">${d.expense}</div><div class="munit">万元</div></div>
+    <div class="metric-card green"><div class="mlabel">净利润</div><div class="mvalue">${d.net_profit}</div><div class="munit">万元</div></div>
+  `;
+
+  // 资金趋势图
+  const maxVal = Math.max(...d.trend_data.flatMap(x=>[x.income,x.expense]));
+  document.getElementById('fundChart').innerHTML = d.trend_data.map(t=>`
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="display:flex;gap:2px;align-items:flex-end;height:160px">
+        <div class="chart-bar income" style="height:${maxVal>0?(t.income/maxVal*150):0}px" title="收入:${t.income}万"></div>
+        <div class="chart-bar expense" style="height:${maxVal>0?(t.expense/maxVal*150):0}px" title="支出:${t.expense}万"></div>
+      </div>
+      <span style="font-size:10px;color:#666">${t.month}</span>
+    </div>
+  `).join('');
+
+  // 项目垫资排行
+  document.getElementById('topProjTable').innerHTML = d.top_projects.map((p,i)=>`
+    <tr>
+      <td>${i+1}</td><td><a href="/projects/${p.id}">${p.name}</a></td>
+      <td>${p.total_invest}</td><td>${p.paid_amount}</td>
+      <td style="color:${p.remaining_amount>20?'var(--red)':'inherit'}">${p.remaining_amount}</td>
+    </tr>
+  `).join('');
+
+  // 预警项目
+  document.getElementById('overdueTable').innerHTML = d.overdue_projects.map(p=>`
+    <tr class="warning">
+      <td><a href="/projects/${p.id}">${p.name}</a></td>
+      <td><span class="badge badge-orange">${p.status}</span></td>
+      <td>${p.total_invest}</td><td>${p.remaining_amount}</td>
+    </tr>
+  `).join('');
+
+  // 项目状态分布
+  document.getElementById('statusDist').innerHTML = d.status_dist.map(s=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span>${s.status}</span><span><span class="badge badge-blue">${s.cnt}个</span> <b>${s.invest}万</b></span>
+    </div>
+  `).join('');
+
+  // 电费回收
+  document.getElementById('ebill-total').textContent = d.total_ebill;
+  document.getElementById('ebill-paid').textContent = d.total_paid_ebill;
+  document.getElementById('ebill-unpaid').textContent = d.total_unpaid_ebill;
+  const pct = d.total_ebill > 0 ? (d.total_paid_ebill / d.total_ebill * 100).toFixed(1) : 0;
+  document.getElementById('ebill-pct').textContent = pct + '%';
+  document.getElementById('ebill-fill').style.width = pct + '%';
+}
+loadDashboard();
+</script>
+{% endblock %}

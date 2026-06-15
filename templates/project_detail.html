@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% block title %}项目详情 - 鑫科新能源ERP{% endblock %}
+{% block page %}
+<div class="detail-header">
+  <div>
+    <div class="detail-title" id="pname">-</div>
+    <div class="detail-meta" id="pmeta">-</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="badge badge-green" id="pstatus">-</span>
+    <a href="/projects" class="btn btn-outline btn-sm">← 返回列表</a>
+    <button class="btn btn-blue btn-sm" onclick="openEdit()">编辑信息</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('info')">基本信息</div>
+  <div class="tab" onclick="switchTab('costs')">成本记录</div>
+  <div class="tab" onclick="switchTab('payments')">资金流水</div>
+  <div class="tab" onclick="switchTab('wbs')">施工进度</div>
+</div>
+
+<!-- 基本信息 -->
+<div class="tab-content active" id="tab-info">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">📋 基本信息</div>
+      <table style="width:100%;font-size:13px">
+        <tr><td style="color:#888;width:120px">项目名称</td><td id="d_name">-</td></tr>
+        <tr><td style="color:#888">客户/业主</td><td id="d_owner">-</td></tr>
+        <tr><td style="color:#888">地址</td><td id="d_addr">-</td></tr>
+        <tr><td style="color:#888">装机容量</td><td id="d_cap">-</td></tr>
+        <tr><td style="color:#888">合作模式</td><td id="d_mode">-</td></tr>
+        <tr><td style="color:#888">建设方式</td><td id="d_build">-</td></tr>
+        <tr><td style="color:#888">项目状态</td><td id="d_status">-</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">💰 投资与回款</div>
+      <table style="width:100%;font-size:13px">
+        <tr><td style="color:#888;width:120px">总投资(万)</td><td id="d_invest">-</td></tr>
+        <tr><td style="color:#888">已付款(万)</td><td id="d_paid">-</td></tr>
+        <tr><td style="color:#888">剩余未付(万)</td><td id="d_remain">-</td></tr>
+        <tr><td style="color:#888">上网电价</td><td id="d_gridcode">-</td></tr>
+        <tr><td style="color:#888">并网日期</td><td id="d_griddate">-</td></tr>
+        <tr><td style="color:#888">发电户号</td><td id="d_profit">-</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 成本记录 -->
+<div class="tab-content" id="tab-costs">
+  <div class="card">
+    <div class="toolbar">
+      <button class="btn btn-primary btn-sm" onclick="openCostModal()">+ 添加成本</button>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>日期</th><th>类型</th><th>金额(万)</th><th>说明</th></tr></thead>
+      <tbody id="costTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 资金流水 -->
+<div class="tab-content" id="tab-payments">
+  <div class="card">
+    <div class="toolbar">
+      <button class="btn btn-primary btn-sm" onclick="openPayModal()">+ 记一笔</button>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>日期</th><th>方向</th><th>类别</th><th>金额(万)</th><th>说明</th></tr></thead>
+      <tbody id="payTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 施工进度 -->
+<div class="tab-content" id="tab-wbs">
+  <div class="card">
+    <div class="card-title">🔨 WBS施工工序</div>
+    <div id="wbsList"></div>
+  </div>
+</div>
+
+<!-- 编辑模态框 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header"><h3>编辑项目信息</h3><button class="modal-close" onclick="closeEdit()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>项目名称</label><input id="e_name"></div>
+      <div class="form-group"><label>客户/业主</label><input id="e_owner"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>地址</label><input id="e_addr"></div>
+      <div class="form-group"><label>装机容量(kW)</label><input type="number" id="e_cap"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>合作模式</label>
+        <select id="e_mode"><option>EPC</option><option>EMC</option><option>代理</option></select>
+      </div>
+      <div class="form-group"><label>建设方式</label>
+        <select id="e_build"><option>阵列式</option><option>阳光棚</option><option>彩钢</option><option>车棚</option></select>
+      </div>
+      <div class="form-group"><label>项目状态</label>
+        <select id="e_status"><option>商机</option><option>签约</option><option>施工</option><option>并网</option><option>运维</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>总投资(万)</label><input type="number" id="e_invest"></div>
+      <div class="form-group"><label>已付款(万)</label><input type="number" id="e_paid"></div>
+      <div class="form-group"><label>剩余未付(万)</label><input type="number" id="e_remain"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>发电户号</label><input id="e_gridcode"></div>
+      <div class="form-group"><label>并网日期</label><input type="date" id="e_griddate"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEdit()">取消</button>
+      <button class="btn btn-primary" onclick="submitEdit()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加成本 -->
+<div class="modal-overlay" id="costModal">
+  <div class="modal">
+    <div class="modal-header"><h3>添加成本记录</h3><button class="modal-close" onclick="closeCostModal()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>成本类型</label>
+        <select id="c_type"><option>材料</option><option>人工</option><option>分包</option><option>融资</option><option>差旅</option><option>业务招待</option><option>其他</option></select>
+      </div>
+      <div class="form-group"><label>金额(万)</label><input type="number" id="c_amt" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>日期</label><input type="date" id="c_date"></div>
+      <div class="form-group" style="flex:2"><label>说明</label><input type="text" id="c_desc" placeholder="备注说明"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCostModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitCost()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 记资金 -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal">
+    <div class="modal-header"><h3>记一笔资金流水</h3><button class="modal-close" onclick="closePayModal()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>收支方向</label>
+        <select id="p_dir"><option value="收入">收入 ↑</option><option value="支出">支出 ↓</option></select>
+      </div>
+      <div class="form-group"><label>金额(万)</label><input type="number" id="p_amt" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>类别</label>
+        <select id="p_cat">
+          <option>EPC工程款</option><option>设备采购款</option><option>施工费</option>
+          <option>运维费</option><option>电费结算</option><option>贷款还款</option>
+          <option>管理费</option><option>其他</option>
+        </select>
+      </div>
+      <div class="form-group"><label>日期</label><input type="date" id="p_date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2"><label>说明</label><input type="text" id="p_desc" placeholder="备注说明"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closePayModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitPay()">确认</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let pid = parseInt(location.pathname.split('/')[2]);
+let projData = {};
+
+async function loadProject(){
+  const r = await fetch(`/api/projects/${pid}`);
+  projData = await r.json();
+  const p = projData;
+  document.getElementById('pname').textContent = p.name;
+  document.getElementById('pmeta').textContent = `${p.owner_name||'-'} | ${p.address||'-'} | ${p.capacity_kw}kW | ${p.build_type}`;
+  document.getElementById('pstatus').textContent = p.status;
+  document.getElementById('pstatus').className = `badge badge-${p.status==='并网'?'green':p.status==='施工'?'orange':'grey'}`;
+  document.getElementById('d_name').textContent = p.name;
+  document.getElementById('d_owner').textContent = p.owner_name||'-';
+  document.getElementById('d_addr').textContent = p.address||'-';
+  document.getElementById('d_cap').textContent = p.capacity_kw + ' kW';
+  document.getElementById('d_mode').textContent = p.mode;
+  document.getElementById('d_build').textContent = p.build_type;
+  document.getElementById('d_status').textContent = p.status;
+  document.getElementById('d_invest').textContent = p.total_invest + ' 万元';
+  document.getElementById('d_paid').textContent = p.paid_amount + ' 万元';
+  document.getElementById('d_remain').textContent = p.remaining_amount + ' 万元';
+  document.getElementById('d_gridcode').textContent = p.grid_code||'-';
+  document.getElementById('d_griddate').textContent = p.grid_date||'-';
+  document.getElementById('d_profit').textContent = p.profit||'-';
+}
+
+async function loadCosts(){
+  const r = await fetch(`/api/projects/${pid}/costs`);
+  const list = await r.json();
+  document.getElementById('costTable').innerHTML = list.map(c=>`
+    <tr><td>${c.record_date}</td><td>${c.cost_type}</td><td>${c.amount}</td><td>${c.description||'-'}</td></tr>
+  `).join('');
+}
+
+async function loadPayments(){
+  const r = await fetch(`/api/projects/${pid}/payments`);
+  const list = await r.json();
+  document.getElementById('payTable').innerHTML = list.map(p=>`
+    <tr><td>${p.payment_date}</td>
+      <td><span class="badge ${p.direction==='收入'?'badge-green':'badge-red'}">${p.direction}</span></td>
+      <td>${p.category}</td><td>${p.amount}</td><td>${p.description||'-'}</td></tr>
+  `).join('');
+}
+
+async function loadWBS(){
+  const r = await fetch(`/api/wbs/${pid}`);
+  const list = await r.json();
+  document.getElementById('wbsList').innerHTML = list.map(n=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" ${n.is_done?'checked':''} onchange="toggleWBS(${n.id},this.checked)">
+      <span style="flex:1;font-size:13px;${n.is_done?'text-decoration:line-through;color:#999':''}">${n.node_name}</span>
+      ${n.is_done?`<span style="font-size:11px;color:var(--xk-green)">✓ ${n.done_date||''}</span>`:''}
+    </div>
+  `).join('');
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.tab:nth-child(${['info','costs','payments','wbs'].indexOf(tab)+1})`).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function openEdit(){
+  const p = projData;
+  document.getElementById('e_name').value = p.name;
+  document.getElementById('e_owner').value = p.owner_name||'';
+  document.getElementById('e_addr').value = p.address||'';
+  document.getElementById('e_cap').value = p.capacity_kw;
+  document.getElementById('e_mode').value = p.mode;
+  document.getElementById('e_build').value = p.build_type;
+  document.getElementById('e_status').value = p.status;
+  document.getElementById('e_invest').value = p.total_invest;
+  document.getElementById('e_paid').value = p.paid_amount;
+  document.getElementById('e_remain').value = p.remaining_amount;
+  document.getElementById('e_gridcode').value = p.grid_code||'';
+  document.getElementById('e_griddate').value = p.grid_date||'';
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEdit(){ document.getElementById('editModal').classList.remove('show'); }
+async function submitEdit(){
+  await fetch(`/api/projects/${pid}`, {method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name: document.getElementById('e_name').value,
+      owner_name: document.getElementById('e_owner').value,
+      address: document.getElementById('e_addr').value,
+      capacity_kw: parseFloat(document.getElementById('e_cap').value),
+      mode: document.getElementById('e_mode').value,
+      build_type: document.getElementById('e_build').value,
+      status: document.getElementById('e_status').value,
+      total_invest: parseFloat(document.getElementById('e_invest').value),
+      paid_amount: parseFloat(document.getElementById('e_paid').value),
+      remaining_amount: parseFloat(document.getElementById('e_remain').value),
+      grid_code: document.getElementById('e_gridcode').value,
+      grid_date: document.getElementById('e_griddate').value,
+    })});
+  closeEdit(); loadProject();
+}
+
+function openCostModal(){ document.getElementById('costModal').classList.add('show'); }
+function closeCostModal(){ document.getElementById('costModal').classList.remove('show'); }
+async function submitCost(){
+  await fetch(`/api/projects/${pid}/costs`, {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      cost_type: document.getElementById('c_type').value,
+      amount: parseFloat(document.getElementById('c_amt').value),
+      record_date: document.getElementById('c_date').value,
+      description: document.getElementById('c_desc').value,
+    })});
+  closeCostModal(); loadCosts();
+}
+
+function openPayModal(){ document.getElementById('payModal').classList.add('show'); }
+function closePayModal(){ document.getElementById('payModal').classList.remove('show'); }
+async function submitPay(){
+  await fetch('/api/payments', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      project_id: pid,
+      direction: document.getElementById('p_dir').value,
+      category: document.getElementById('p_cat').value,
+      amount: parseFloat(document.getElementById('p_amt').value),
+      payment_date: document.getElementById('p_date').value,
+      description: document.getElementById('p_desc').value,
+    })});
+  closePayModal(); loadPayments();
+}
+
+async function toggleWBS(id, done){
+  await fetch(`/api/wbs/${pid}`, {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id, is_done: done?1:0, done_date: done?new Date().toISOString().slice(0,10):''})});
+  loadWBS();
+}
+
+loadProject(); loadCosts(); loadPayments(); loadWBS();
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}鑫科新能源ERP{% endblock %}</title>
+<link rel="stylesheet" href="/static/erp.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <span class="brand-xk">XKNE</span>
+    <span class="brand-name">鑫科新能源</span>
+    <span class="brand-sub">光伏企业全链路管理系统</span>
+  </div>
+  <div class="nav-links">
+    <a href="/dashboard" class="nav-link" id="nav-dashboard">📊 经营看板</a>
+    <a href="/projects" class="nav-link" id="nav-projects">📁 项目管理</a>
+    <a href="/sales" class="nav-link" id="nav-sales">🎯 销售管理</a>
+    <a href="/electricity" class="nav-link" id="nav-electricity">⚡ 电费结算</a>
+    <a href="/inventory" class="nav-link" id="nav-inventory">📦 库存管理</a>
+    <a href="/maintenance" class="nav-link" id="nav-maintenance">🔧 运维工单</a>
+  </div>
+  <div class="user-info">
+    <span>👤 admin</span>
+    <a href="/login">退出</a>
+  </div>
+</div>
+<div class="page-content">
+{% block page %}{% endblock %}
+</div>
+<script>
+function activeNav() {
+  const path = location.pathname;
+  document.querySelectorAll('.nav-link').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === path);
+  });
+}
+activeNav();
+</script>
+</body>
+</html>

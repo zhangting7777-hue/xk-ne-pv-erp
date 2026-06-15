@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block title %}销售漏斗 - 鑫科新能源ERP{% endblock %}
+{% block page %}
+<div class="page-title">🎯 市场销售管理</div>
+
+<div class="two-col" style="margin-bottom:16px">
+  <div class="metric-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="metric-card"><div class="mlabel">商机总数</div><div class="mvalue" id="m-total">-</div><div class="munit">个</div></div>
+    <div class="metric-card green"><div class="mlabel">赢单</div><div class="mvalue" id="m-won">-</div><div class="munit">个</div></div>
+    <div class="metric-card orange"><div class="mlabel">输单</div><div class="mvalue" id="m-lost">-</div><div class="munit">个</div></div>
+    <div class="metric-card"><div class="mlabel">预计金额</div><div class="mvalue" id="m-amount">-</div><div class="munit">万元</div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('funnel')">漏斗视图</div>
+  <div class="tab" onclick="switchTab('list')">商机列表</div>
+  <div class="tab" onclick="switchTab('customer')">客户档案</div>
+  <div class="tab" onclick="switchTab('performance')">业绩看板</div>
+  <div class="tab" onclick="switchTab('expenses')">市场费用</div>
+</div>
+
+<!-- 漏斗视图 -->
+<div class="tab-content active" id="tab-funnel">
+  <div class="card">
+    <div class="card-title">📊 销售漏斗（工商业项目8阶段）</div>
+    <div id="funnelChart" style="display:flex;gap:4px;align-items:flex-end;padding:10px 0;min-height:200px"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;font-size:12px;color:#666">
+      <span style="color:#1D9E75">🟢 赢单率 = 赢单数/总商机数</span>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📋 商机等级分布</div>
+    <div style="display:flex;gap:12px">
+      <div class="metric-card" style="flex:1;border-left:4px solid #E24B4A"><div class="mlabel">A级（优质）</div><div class="mvalue" style="color:#E24B4A" id="m-a">-</div></div>
+      <div class="metric-card" style="flex:1;border-left:4px solid #E67E22"><div class="mlabel">B级（常规）</div><div class="mvalue" style="color:#E67E22" id="m-b">-</div></div>
+      <div class="metric-card" style="flex:1;border-left:4px solid #C9A037"><div class="mlabel">C级（潜力）</div><div class="mvalue" style="color:#C9A037" id="m-c">-</div></div>
+      <div class="metric-card" style="flex:1;border-left:4px solid #888"><div class="mlabel">D级（劣质）</div><div class="mvalue" style="color:#888" id="m-d">-</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 商机列表 -->
+<div class="tab-content" id="tab-list">
+  <div class="card">
+    <div class="toolbar">
+      <div class="search-box"><input type="text" id="kw" placeholder="搜索项目/客户/备注" oninput="loadOpps()"></div>
+      <select id="fStage" onchange="loadOpps()" style="padding:7px;border:1px solid var(--border);border-radius:6px">
+        <option value="">全部阶段</option>
+        <option>信息搜集</option><option>项目立项</option><option>前期可研</option>
+        <option>方案设计</option><option>深化设计</option><option>清单编制</option>
+        <option>项目招标</option><option>赢单</option><option>输单</option>
+      </select>
+      <select id="fLevel" onchange="loadOpps()" style="padding:7px;border:1px solid var(--border);border-radius:6px">
+        <option value="">全部等级</option>
+        <option>A级</option><option>B级</option><option>C级</option><option>D级</option>
+      </select>
+      <button class="btn btn-primary" onclick="openAddOpp()">+ 新增商机</button>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>项目名称</th><th>客户</th><th>等级</th><th>阶段</th>
+          <th>容量(kW)</th><th>预计投资(万)</th><th>负责人</th><th>更新时间</th><th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="oppTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 客户档案 -->
+<div class="tab-content" id="tab-customer">
+  <div class="card">
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openAddCust()">+ 新增客户</button>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>客户名称</th><th>联系人</th><th>行业</th><th>年用电量</th><th>意向容量(kW)</th><th>业务来源</th><th>负责销售</th><th>商机数</th></tr>
+      </thead>
+      <tbody id="custTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 业绩看板 -->
+<div class="tab-content" id="tab-performance">
+  <div class="card">
+    <div class="card-title">📊 业务员业绩排行</div>
+    <table class="data-table">
+      <thead><tr><th>姓名</th><th>职位</th><th>商机数</th><th>赢单数</th><th>合同总额(万)</th><th>累计回款(万)</th><th>市场费用(万)</th><th>净利润(万)</th></tr></thead>
+      <tbody id="perfTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 市场费用 -->
+<div class="tab-content" id="tab-expenses">
+  <div class="card">
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openAddExp()">+ 记一笔费用</button>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>日期</th><th>项目</th><th>人员</th><th>费用类型</th><th>金额(万)</th><th>说明</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody id="expTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 新增商机 -->
+<div class="modal-overlay" id="addOppModal">
+  <div class="modal">
+    <div class="modal-header"><h3>新增商机</h3><button class="modal-close" onclick="closeAddOpp()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>商机名称 *</label><input id="o_name" placeholder="XX公司光伏项目"></div>
+      <div class="form-group"><label>所属客户 *</label><select id="o_cust"><option value="">请选择</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>项目类型</label><select id="o_type"><option>工商业</option><option>户用</option></select></div>
+      <div class="form-group"><label>装机容量(kW)</label><input type="number" id="o_cap" value="200"></div>
+      <div class="form-group"><label>意向容量(kW)</label><input type="number" id="o_intent" value="200"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>电价(元/度)</label><input type="number" id="o_price" step="0.01" value="0.73"></div>
+      <div class="form-group"><label>预计投资(万)</label><input type="number" id="o_invest" step="0.1" value="50"></div>
+      <div class="form-group"><label>项目等级</label>
+        <select id="o_level"><option>A级</option><option selected>B级</option><option>C级</option><option>D级</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>负责人</label><select id="o_sales"><option value="">请选择</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddOpp()">取消</button>
+      <button class="btn btn-primary" onclick="submitAddOpp()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增客户 -->
+<div class="modal-overlay" id="addCustModal">
+  <div class="modal">
+    <div class="modal-header"><h3>新增客户</h3><button class="modal-close" onclick="closeAddCust()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>客户名称 *</label><input id="c_name" placeholder="公司全称"></div>
+      <div class="form-group"><label>联系人</label><input id="c_contact"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>联系电话</label><input id="c_phone"></div>
+      <div class="form-group"><label>所属行业</label><input id="c_industry"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>地址</label><input id="c_addr"></div>
+      <div class="form-group"><label>年用电量(kWh)</label><input type="number" id="c_pow" value="500000"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>屋顶面积(m²)</label><input type="number" id="c_roof" value="5000"></div>
+      <div class="form-group"><label>业务来源</label>
+        <select id="c_src"><option>陌生开发</option><option>老板资源</option><option>渠道合作</option><option>老客转介绍</option></select>
+      </div>
+      <div class="form-group"><label>负责人</label><select id="c_sales"><option value="">请选择</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddCust()">取消</button>
+      <button class="btn btn-primary" onclick="submitAddCust()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 记费用 -->
+<div class="modal-overlay" id="addExpModal">
+  <div class="modal">
+    <div class="modal-header"><h3>记一笔市场费用</h3><button class="modal-close" onclick="closeAddExp()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>费用类型</label>
+        <select id="e_type"><option>差旅费</option><option>招待费</option><option>中介费</option><option>设计费</option><option>其他</option></select>
+      </div>
+      <div class="form-group"><label>金额(万)</label><input type="number" id="e_amt" step="0.01"></div>
+      <div class="form-group"><label>日期</label><input type="date" id="e_date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>关联商机（可选）</label><select id="e_opp"><option value="">无关联</option></select></div>
+      <div class="form-group"><label>负责人</label><select id="e_sales"><option value="">请选择</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2"><label>说明</label><input id="e_desc" placeholder="费用说明"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddExp()">取消</button>
+      <button class="btn btn-primary" onclick="submitAddExp()">确认</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- 漏斗 ----
+async function loadFunnel(){
+  const r = await fetch('/api/sales/funnel');
+  const d = await r.json();
+  document.getElementById('m-total').textContent = d.stages.reduce((s,x)=>s+x.cnt, 0) + d.won_cnt + d.lost_cnt;
+  document.getElementById('m-won').textContent = d.won_cnt;
+  document.getElementById('m-lost').textContent = d.lost_cnt;
+  document.getElementById('m-amount').textContent = d.stages.reduce((s,x)=>s+x.amt, 0).toFixed(0);
+  const max = Math.max(...d.stages.map(x=>x.cnt));
+  document.getElementById('funnelChart').innerHTML = d.stages.map(s=>`
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="font-size:14px;font-weight:700;color:var(--xk-blue)">${s.cnt}</div>
+      <div class="progress-bar" style="width:100%;height:${max>0?(s.cnt/max*180):0}px;background:var(--xk-green);border-radius:4px"></div>
+      <div style="font-size:11px;color:#666;text-align:center;padding:4px 0">${s.stage}</div>
+      <div style="font-size:10px;color:var(--xk-green)">${s.amt.toFixed(0)}万</div>
+    </div>
+  `).join('');
+
+  // 等级分布
+  const lvls = {};
+  d.stages.forEach(s=>{});
+  const opp = await (await fetch('/api/sales/opportunities')).json();
+  ['A级','B级','C级','D级'].forEach(l=>{
+    const cnt = opp.filter(o=>o.level===l&&!o.is_lost&&!o.is_won).length;
+    document.getElementById('m-'+l[0].toLowerCase()).textContent = cnt;
+  });
+}
+
+// ---- 商机 ----
+async function loadOpps(){
+  const kw = document.getElementById('kw').value;
+  const stage = document.getElementById('fStage').value;
+  const level = document.getElementById('fLevel').value;
+  const r = await fetch(`/api/sales/opportunities?kw=${encodeURIComponent(kw)}&stage=${encodeURIComponent(stage)}&level=${encodeURIComponent(level)}`);
+  const list = await r.json();
+  document.getElementById('oppTable').innerHTML = list.map(o=>`
+    <tr class="${o.is_won?'style="background:#E1F5EE"':o.is_lost?'style="background:#FFF3E0"':''}">
+      <td><b>${o.project_name||'-'}</b></td>
+      <td>${o.cust_name||'-'}</td>
+      <td><span class="badge badge-${o.level==='A级'?'red':o.level==='B级'?'orange':o.level==='C级'?'orange':'grey'}">${o.level||'-'}</span></td>
+      <td><span class="badge badge-${o.is_won?'green':o.is_lost?'grey':'blue'}">${o.is_won?'赢单':o.is_lost?'输单':o.stage}</span></td>
+      <td>${o.capacity_kw||0}</td>
+      <td>${(o.amount||0).toFixed(1)}</td>
+      <td>${o.sales_name||'-'}</td>
+      <td>${o.updated_at?o.updated_at.slice(0,10):'-'}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="editOpp(${o.id})">编辑</button>
+        <button class="btn btn-primary btn-sm" onclick="winOpp(${o.id})">赢单</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function openAddOpp(){
+  const [cr, sr] = await Promise.all([fetch('/api/sales/customers'), fetch('/api/sales/persons')]);
+  const custs = await cr.json(); const sales = await sr.json();
+  document.getElementById('o_cust').innerHTML = '<option value="">请选择</option>' + custs.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('o_sales').innerHTML = '<option value="">请选择</option>' + sales.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('addOppModal').classList.add('show');
+}
+function closeAddOpp(){ document.getElementById('addOppModal').classList.remove('show'); }
+async function submitAddOpp(){
+  await fetch('/api/sales/opportunities', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      project_name: document.getElementById('o_name').value,
+      customer_id: parseInt(document.getElementById('o_cust').value)||null,
+      project_type: document.getElementById('o_type').value,
+      capacity_kw: parseFloat(document.getElementById('o_cap').value)||0,
+      electricity_price: parseFloat(document.getElementById('o_price').value)||0,
+      expected_invest: parseFloat(document.getElementById('o_invest').value)||0,
+      level: document.getElementById('o_level').value,
+      assigned_to: parseInt(document.getElementById('o_sales').value)||null,
+    })});
+  closeAddOpp(); loadOpps(); loadFunnel();
+}
+
+async function winOpp(id){
+  await fetch(`/api/sales/opportunities/${id}`, {method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({is_won: 1, stage: '赢单'})});
+  loadOpps(); loadFunnel();
+}
+
+// ---- 客户 ----
+async function loadCusts(){
+  const r = await fetch('/api/sales/customers');
+  const list = await r.json();
+  document.getElementById('custTable').innerHTML = list.map(c=>`
+    <tr>
+      <td><b>${c.name}</b></td><td>${c.contact_person||'-'}</td><td>${c.industry||'-'}</td>
+      <td>${(c.annual_power_kwh||0).toLocaleString()}</td><td>${c.intended_capacity_kw||0}</td>
+      <td>${c.source||'-'}</td><td>${c.sales_name||'-'}</td><td>${c.opp_count||0}</td>
+    </tr>
+  `).join('');
+}
+
+async function openAddCust(){
+  const sr = await (await fetch('/api/sales/persons')).json();
+  document.getElementById('c_sales').innerHTML = '<option value="">请选择</option>' + sr.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('addCustModal').classList.add('show');
+}
+function closeAddCust(){ document.getElementById('addCustModal').classList.remove('show'); }
+async function submitAddCust(){
+  await fetch('/api/sales/customers', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name: document.getElementById('c_name').value,
+      contact_person: document.getElementById('c_contact').value,
+      phone: document.getElementById('c_phone').value,
+      address: document.getElementById('c_addr').value,
+      industry: document.getElementById('c_industry').value,
+      annual_power_kwh: parseFloat(document.getElementById('c_pow').value)||0,
+      roof_area_sqm: parseFloat(document.getElementById('c_roof').value)||0,
+      source: document.getElementById('c_src').value,
+      assigned_to: parseInt(document.getElementById('c_sales').value)||null,
+    })});
+  closeAddCust(); loadCusts();
+}
+
+// ---- 业绩 ----
+async function loadPerf(){
+  const r = await fetch('/api/sales/performance');
+  const list = await r.json();
+  document.getElementById('perfTable').innerHTML = list.map(p=>`
+    <tr>
+      <td><b>${p.name}</b></td><td>${p.role}</td>
+      <td>${p.opp_count}</td><td>${p.won_count}</td>
+      <td style="font-weight:700">${(p.total_contract||0).toFixed(1)}</td>
+      <td style="color:var(--xk-green)">${(p.total_collected||0).toFixed(1)}</td>
+      <td style="color:var(--orange)">${(p.total_expense||0).toFixed(2)}</td>
+      <td style="color:var(--xk-green);font-weight:700">${((p.total_collected||0)-(p.total_expense||0)).toFixed(2)}</td>
+    </tr>
+  `).join('');
+}
+
+// ---- 费用 ----
+async function loadExp(){
+  const r = await fetch('/api/sales/expenses');
+  const list = await r.json();
+  document.getElementById('expTable').innerHTML = list.map(e=>`
+    <tr class="${e.status==='待审批'?'warning':''}">
+      <td>${e.expense_date||'-'}</td><td>${e.project_name||'-'}</td>
+      <td>${e.sales_name||'-'}</td><td>${e.expense_type}</td>
+      <td style="font-weight:700">${e.amount}</td><td>${e.description||'-'}</td>
+      <td><span class="badge badge-${e.status==='已审批'?'green':'orange'}">${e.status}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="apprExp(${e.id})">审批</button></td>
+    </tr>
+  `).join('');
+}
+
+async function openAddExp(){
+  const [sr, or] = await Promise.all([fetch('/api/sales/persons'), fetch('/api/sales/opportunities')]);
+  const sales = await sr.json(); const opps = await or.json();
+  document.getElementById('e_sales').innerHTML = '<option value="">请选择</option>' + sales.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('e_opp').innerHTML = '<option value="">无关联</option>' + opps.map(o=>`<option value="${o.id}">${o.project_name}</option>`).join('');
+  document.getElementById('addExpModal').classList.add('show');
+}
+function closeAddExp(){ document.getElementById('addExpModal').classList.remove('show'); }
+async function submitAddExp(){
+  await fetch('/api/sales/expenses', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      expense_type: document.getElementById('e_type').value,
+      amount: parseFloat(document.getElementById('e_amt').value)||0,
+      expense_date: document.getElementById('e_date').value,
+      opportunity_id: parseInt(document.getElementById('e_opp').value)||null,
+      sales_person_id: parseInt(document.getElementById('e_sales').value)||null,
+      description: document.getElementById('e_desc').value,
+    })});
+  closeAddExp(); loadExp();
+}
+async function apprExp(id){
+  await fetch(`/api/sales/expenses/${id}`, {method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({status: '已审批'})});
+  loadExp();
+}
+
+// ---- Tab 切换 ----
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['funnel','list','customer','performance','expenses'][i]===tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='funnel') loadFunnel();
+  else if(tab==='list') loadOpps();
+  else if(tab==='customer') loadCusts();
+  else if(tab==='performance') loadPerf();
+  else if(tab==='expenses') loadExp();
+}
+
+loadFunnel();
+</script>
+{% endblock %}

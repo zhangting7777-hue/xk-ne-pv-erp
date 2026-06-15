@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>登录 - 鑫科新能源ERP</title>
+<link rel="stylesheet" href="/static/erp.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-box">
+    <div style="text-align:center;margin-bottom:20px">
+      <span style="background:#0C447C;color:#fff;font-weight:900;font-size:20px;padding:4px 14px;border-radius:6px;letter-spacing:-1px">XKNE</span>
+    </div>
+    <h2>鑫科新能源光伏ERP</h2>
+    <p>全链路企业管理系统</p>
+    <div class="form-group"><label>用户名</label><input type="text" id="username" placeholder="admin" value="admin"></div>
+    <div class="form-group"><label>密码</label><input type="password" id="password" placeholder="admin888" value="admin888"></div>
+    <button class="btn btn-primary" onclick="doLogin()" style="width:100%;padding:10px;font-size:14px;margin-top:8px">登 录</button>
+    <div class="hint">默认账号：admin / admin888</div>
+    <div id="err" style="color:#E24B4A;text-align:center;margin-top:10px;font-size:12px;display:none"></div>
+  </div>
+</div>
+<script>
+function doLogin(){
+  const u = document.getElementById('username').value;
+  const p = document.getElementById('password').value;
+  if(!u || !p){ document.getElementById('err').textContent='请输入用户名和密码';document.getElementById('err').style.display='block';return; }
+  location.href='/dashboard';
+}
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+</script>
+</body>
+</html>

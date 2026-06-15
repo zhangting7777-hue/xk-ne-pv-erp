@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}运维工单 - 鑫科新能源ERP{% endblock %}
+{% block page %}
+<div class="page-title">🔧 运维工单管理</div>
+
+<div class="card">
+  <div class="toolbar">
+    <select id="moStatus" onchange="loadOrders()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px">
+      <option value="">全部状态</option>
+      <option>待处理</option><option>处理中</option><option>已完成</option>
+    </select>
+    <button class="btn btn-primary" onclick="openAddOrder()">+ 新建工单</button>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr><th>项目名称</th><th>工单类型</th><th>标题</th><th>描述</th><th>负责人</th><th>状态</th><th>创建时间</th><th>完成时间</th><th>操作</th></tr>
+    </thead>
+    <tbody id="orderTable"></tbody>
+  </table>
+</div>
+
+<!-- 新建工单 -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header"><h3>新建运维工单</h3><button class="modal-close" onclick="closeAddOrder()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>选择项目 *</label><select id="o_proj"><option value="">请选择项目</option></select></div>
+      <div class="form-group"><label>工单类型</label>
+        <select id="o_type"><option>巡检</option><option>故障维修</option><option>清洗</option><option>设备更换</option><option>其他</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>标题 *</label><input id="o_title" placeholder="如：逆变器通讯故障"></div>
+      <div class="form-group"><label>负责人</label><input id="o_assign" placeholder="运维人员姓名"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2"><label>详细描述</label><textarea id="o_desc" rows="3" placeholder="问题描述..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddOrder()">取消</button>
+      <button class="btn btn-primary" onclick="submitOrder()">确认创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- 更新状态 -->
+<div class="modal-overlay" id="updModal">
+  <div class="modal">
+    <div class="modal-header"><h3>更新工单状态</h3><button class="modal-close" onclick="closeUpd()">×</button></div>
+    <input type="hidden" id="upd_id">
+    <div class="form-row">
+      <div class="form-group"><label>状态</label>
+        <select id="upd_status"><option>待处理</option><option>处理中</option><option>已完成</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeUpd()">取消</button>
+      <button class="btn btn-primary" onclick="submitUpd()">确认更新</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadOrders(){
+  const r = await fetch('/api/maintenance-orders');
+  const list = await r.json();
+  const filtered = list.filter(o=>!document.getElementById('moStatus').value || o.status===document.getElementById('moStatus').value);
+  document.getElementById('orderTable').innerHTML = filtered.map(o=>`
+    <tr class="${o.status==='待处理'?'warning':''}">
+      <td><a href="/projects/${o.project_id}" style="font-weight:600">${o.project_name||'-'}</a></td>
+      <td>${o.order_type}</td>
+      <td><b>${o.title}</b></td>
+      <td>${(o.description||'-').slice(0,30)}</td>
+      <td>${o.assigned_to||'-'}</td>
+      <td><span class="badge badge-${o.status==='已完成'?'green':o.status==='处理中'?'orange':'red'}">${o.status}</span></td>
+      <td>${o.created_at||'-'}</td>
+      <td>${o.done_at||'-'}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="openUpd(${o.id},'${o.status}')">更新</button></td>
+    </tr>
+  `).join('');
+}
+
+async function openAddOrder(){
+  const r = await fetch('/api/projects');
+  const projs = await r.json();
+  document.getElementById('o_proj').innerHTML = '<option value="">请选择项目</option>' +
+    projs.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('addModal').classList.add('show');
+}
+function closeAddOrder(){ document.getElementById('addModal').classList.remove('show'); }
+async function submitOrder(){
+  await fetch('/api/maintenance-orders', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      project_id: parseInt(document.getElementById('o_proj').value),
+      order_type: document.getElementById('o_type').value,
+      title: document.getElementById('o_title').value,
+      description: document.getElementById('o_desc').value,
+      assigned_to: document.getElementById('o_assign').value,
+    })});
+  closeAddOrder(); loadOrders();
+}
+
+function openUpd(id, status){
+  document.getElementById('upd_id').value=id;
+  document.getElementById('upd_status').value=status;
+  document.getElementById('updModal').classList.add('show');
+}
+function closeUpd(){ document.getElementById('updModal').classList.remove('show'); }
+async function submitUpd(){
+  await fetch(`/api/maintenance-orders/${document.getElementById('upd_id').value}`, {method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({status: document.getElementById('upd_status').value})});
+  closeUpd(); loadOrders();
+}
+
+loadOrders();
+</script>
+{% endblock %}

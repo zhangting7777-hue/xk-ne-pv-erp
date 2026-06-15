@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}电费结算 - 鑫科新能源ERP{% endblock %}
+{% block page %}
+<div class="page-title">⚡ 电费结算管理</div>
+
+<div class="metric-grid" style="margin-bottom:16px">
+  <div class="metric-card"><div class="mlabel">累计电费应收</div><div class="mvalue" id="m-total">-</div><div class="munit">万元</div></div>
+  <div class="metric-card green"><div class="mlabel">已回款</div><div class="mvalue" id="m-paid">-</div><div class="munit">万元</div></div>
+  <div class="metric-card red"><div class="mlabel">未回款</div><div class="mvalue" id="m-unpaid">-</div><div class="munit">万元</div></div>
+  <div class="metric-card"><div class="mlabel">账单总数</div><div class="mvalue" id="m-count">-</div><div class="munit">条</div></div>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <select id="ebStatus" onchange="loadBills()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px">
+      <option value="">全部状态</option>
+      <option>待收款</option><option>部分收款</option><option>已结清</option>
+    </select>
+    <button class="btn btn-primary" onclick="openAddBill()">+ 生成账单</button>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>项目名称</th><th>客户</th><th>容量(kW)</th>
+        <th>账单月份</th><th>发电量(kWh)</th><th>电价</th>
+        <th>电费收益(万)</th><th>已付(万)</th><th>状态</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="billTable"></tbody>
+  </table>
+</div>
+
+<!-- 生成账单 -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header"><h3>生成电费账单</h3><button class="modal-close" onclick="closeAddBill()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>选择项目 *</label>
+        <select id="b_project"><option value="">请选择项目</option></select>
+      </div>
+      <div class="form-group"><label>账单月份</label><input type="month" id="b_month"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>发电量(kWh)</label><input type="number" id="b_gen" step="1" placeholder="如：25000"></div>
+      <div class="form-group"><label>上网电价(元/度)</label><input type="number" id="b_price" step="0.001" value="0.73"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddBill()">取消</button>
+      <button class="btn btn-primary" onclick="submitBill()">生成账单</button>
+    </div>
+  </div>
+</div>
+
+<!-- 更新状态 -->
+<div class="modal-overlay" id="updModal">
+  <div class="modal">
+    <div class="modal-header"><h3>更新收款状态</h3><button class="modal-close" onclick="closeUpd()">×</button></div>
+    <input type="hidden" id="upd_id">
+    <div class="form-row">
+      <div class="form-group"><label>收款状态</label>
+        <select id="upd_status"><option>待收款</option><option>部分收款</option><option>已结清</option></select>
+      </div>
+      <div class="form-group"><label>已收款金额(万)</label><input type="number" id="upd_paid" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>日期</label><input type="date" id="upd_date"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeUpd()">取消</button>
+      <button class="btn btn-primary" onclick="submitUpd()">确认更新</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadBills(){
+  const r = await fetch('/api/electricity-bills');
+  const list = await r.json();
+  let total=0,paid=0,unpaid=0;
+  list.forEach(b=>{ total+=b.revenue||0; paid+=b.paid_amount||0; });
+  unpaid=total-paid;
+  document.getElementById('m-total').textContent=total.toFixed(1);
+  document.getElementById('m-paid').textContent=paid.toFixed(1);
+  document.getElementById('m-unpaid').textContent=unpaid.toFixed(1);
+  document.getElementById('m-count').textContent=list.length;
+
+  const filtered = list.filter(b=>!document.getElementById('ebStatus').value || b.payment_status===document.getElementById('ebStatus').value);
+  document.getElementById('billTable').innerHTML = filtered.map(b=>`
+    <tr class="${b.payment_status==='待收款'?'warning':''}">
+      <td><a href="/projects/${b.project_id}" style="font-weight:600">${b.project_name||'-'}</a></td>
+      <td>${b.owner_name||'-'}</td><td>${b.capacity_kw||'-'}</td>
+      <td>${b.bill_month}</td><td>${(b.gen_kwh||0).toLocaleString()}</td>
+      <td>${b.grid_price}</td>
+      <td style="font-weight:700;color:var(--xk-green)">${b.revenue}</td>
+      <td>${b.paid_amount}</td>
+      <td><span class="badge badge-${b.payment_status==='已结清'?'green':b.payment_status==='部分收款'?'orange':'red'}">${b.payment_status}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="openUpd(${b.id},'${b.payment_status}',${b.paid_amount})">更新</button></td>
+    </tr>
+  `).join('');
+}
+
+async function openAddBill(){
+  const r = await fetch('/api/projects');
+  const projects = await r.json();
+  document.getElementById('b_project').innerHTML = '<option value="">请选择项目</option>' +
+    projects.map(p=>`<option value="${p.id}">${p.name} (${p.owner_name||'-'})</option>`).join('');
+  document.getElementById('addModal').classList.add('show');
+}
+function closeAddBill(){ document.getElementById('addModal').classList.remove('show'); }
+async function submitBill(){
+  const gen = parseFloat(document.getElementById('b_gen').value) || 0;
+  const price = parseFloat(document.getElementById('b_price').value) || 0;
+  await fetch('/api/electricity-bills', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      project_id: parseInt(document.getElementById('b_project').value),
+      bill_month: document.getElementById('b_month').value,
+      gen_kwh: gen,
+      grid_price: price,
+      revenue: (gen * price / 10000).toFixed(4),
+      payment_status: '待收款',
+    })});
+  closeAddBill(); loadBills();
+}
+
+function openUpd(id,status,paid){
+  document.getElementById('upd_id').value=id;
+  document.getElementById('upd_status').value=status;
+  document.getElementById('upd_paid').value=paid;
+  document.getElementById('updModal').classList.add('show');
+}
+function closeUpd(){ document.getElementById('updModal').classList.remove('show'); }
+async function submitUpd(){
+  await fetch(`/api/electricity-bills/${document.getElementById('upd_id').value}`, {method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      payment_status: document.getElementById('upd_status').value,
+      paid_amount: parseFloat(document.getElementById('upd_paid').value)||0,
+      record_date: document.getElementById('upd_date').value,
+    })});
+  closeUpd(); loadBills();
+}
+
+loadBills();
+</script>
+{% endblock %}

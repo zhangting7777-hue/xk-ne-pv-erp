@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}项目管理 - 鑫科新能源ERP{% endblock %}
+{% block page %}
+<div class="page-title">📁 项目管理</div>
+
+<div class="card">
+  <div class="toolbar">
+    <div class="search-box">
+      <input type="text" id="kw" placeholder="搜索项目名称/客户/地址" oninput="loadProjects()">
+    </div>
+    <select id="statusFilter" onchange="loadProjects()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px">
+      <option value="">全部状态</option>
+      <option>商机</option><option>签约</option><option>施工</option><option>并网</option><option>运维</option>
+    </select>
+    <button class="btn btn-primary" onclick="openAddModal()">+ 新增项目</button>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>项目名称</th><th>客户/业主</th><th>地址</th><th>容量(kW)</th>
+        <th>模式</th><th>建设方式</th><th>状态</th><th>总投资(万)</th><th>已付(万)</th><th>剩余(万)</th><th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="projTable"></tbody>
+  </table>
+</div>
+
+<!-- 新增项目模态框 -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>新增项目</h3>
+      <button class="modal-close" onclick="closeAddModal()">×</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>项目名称 *</label><input type="text" id="a_name" placeholder="如：XXX工厂屋顶光伏项目">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>客户/业主单位</label><input type="text" id="a_owner" placeholder="客户企业名称"></div>
+      <div class="form-group"><label>项目地址</label><input type="text" id="a_addr" placeholder="福建省福州市"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>装机容量(kW)</label><input type="number" id="a_cap" value="240" step="0.1"></div>
+      <div class="form-group">
+        <label>合作模式</label>
+        <select id="a_mode"><option>EPC</option><option>EMC</option><option>代理</option></select>
+      </div>
+      <div class="form-group">
+        <label>建设方式</label>
+        <select id="a_build"><option>阵列式</option><option>阳光棚</option><option>彩钢</option><option>车棚</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>项目状态</label>
+        <select id="a_status"><option>商机</option><option>签约</option><option>施工</option><option>并网</option><option>运维</option></select>
+      </div>
+      <div class="form-group"><label>总投资(万元)</label><input type="number" id="a_invest" value="60" step="0.1"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitAdd()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadProjects(){
+  const kw = document.getElementById('kw').value;
+  const status = document.getElementById('statusFilter').value;
+  const r = await fetch(`/api/projects?keyword=${encodeURIComponent(kw)}&status=${encodeURIComponent(status)}`);
+  const list = await r.json();
+  document.getElementById('projTable').innerHTML = list.map(p=>`
+    <tr>
+      <td><a href="/projects/${p.id}" style="font-weight:600;color:var(--xk-blue)">${p.name}</a></td>
+      <td>${p.owner_name||'-'}</td>
+      <td>${p.address||'-'}</td>
+      <td>${p.capacity_kw}</td>
+      <td><span class="badge badge-blue">${p.mode}</span></td>
+      <td>${p.build_type}</td>
+      <td><span class="badge badge-${p.status==='并网'?'green':p.status==='施工'?'orange':'grey'}">${p.status}</span></td>
+      <td>${p.total_invest}</td>
+      <td>${p.paid_amount}</td>
+      <td style="color:${p.remaining_amount>20?'var(--red)':'inherit'}">${p.remaining_amount}</td>
+      <td><a href="/projects/${p.id}" class="btn btn-outline btn-sm">详情</a></td>
+    </tr>
+  `).join('');
+}
+
+function openAddModal(){ document.getElementById('addModal').classList.add('show'); }
+function closeAddModal(){ document.getElementById('addModal').classList.remove('show'); }
+async function submitAdd(){
+  const data = {
+    name: document.getElementById('a_name').value,
+    owner_name: document.getElementById('a_owner').value,
+    address: document.getElementById('a_addr').value,
+    capacity_kw: parseFloat(document.getElementById('a_cap').value) || 0,
+    mode: document.getElementById('a_mode').value,
+    build_type: document.getElementById('a_build').value,
+    status: document.getElementById('a_status').value,
+    total_invest: parseFloat(document.getElementById('a_invest').value) || 0,
+  };
+  if(!data.name){ alert('请输入项目名称'); return; }
+  await fetch('/api/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  closeAddModal();
+  loadProjects();
+}
+loadProjects();
+</script>
+{% endblock %}

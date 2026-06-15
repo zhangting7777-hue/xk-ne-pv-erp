@@ -1,0 +1,145 @@
+/* ====== 全局重置 ====== */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --xk-blue:#0C447C;--xk-blue2:#185FA5;--xk-green:#1D9E75;--xk-green2:#0F6E56;
+  --xk-light:#E6F1FB;--xk-glight:#E1F5EE;
+  --red:#E24B4A;--orange:#E67E22;--gold:#C9A037;
+  --text-primary:#1a1a1a;--text-secondary:#666;
+  --border:#dde6ee;--bg:#F0F5FF;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;color:var(--text-primary);background:var(--bg);min-height:100vh}
+
+/* ====== 顶部导航 ====== */
+.topbar{background:var(--xk-blue);color:#fff;padding:0 20px;display:flex;align-items:center;height:52px;gap:20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.brand{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.brand-xk{background:#fff;color:var(--xk-blue);font-weight:900;font-size:14px;padding:2px 8px;border-radius:4px;letter-spacing:-1px}
+.brand-name{font-size:14px;font-weight:700;color:#fff}
+.brand-sub{font-size:11px;color:rgba(255,255,255,.6);margin-left:4px}
+.nav-links{display:flex;gap:2px;flex:1}
+.nav-link{padding:6px 14px;color:rgba(255,255,255,.8);text-decoration:none;font-size:13px;font-weight:500;border-radius:6px;transition:all .2s}
+.nav-link:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-link.active{color:#fff;background:rgba(255,255,255,.2)}
+.user-info{display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.7);flex-shrink:0}
+.user-info a{color:rgba(255,255,255,.6);text-decoration:none}
+.user-info a:hover{color:#fff}
+
+/* ====== 页面通用 ====== */
+.page-content{padding:20px}
+.page-title{font-size:18px;font-weight:700;color:var(--xk-blue);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+
+/* ====== 卡片 ====== */
+.card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.card-title{font-size:14px;font-weight:700;color:var(--xk-blue);margin-bottom:12px}
+
+/* ====== 指标卡 ====== */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.metric-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.metric-card .mlabel{font-size:11px;color:var(--text-secondary);margin-bottom:6px;font-weight:500}
+.metric-card .mvalue{font-size:24px;font-weight:800;color:var(--xk-blue)}
+.metric-card .munit{font-size:11px;color:var(--text-secondary);margin-top:2px}
+.metric-card.green .mvalue{color:var(--xk-green)}
+.metric-card.red .mvalue{color:var(--red)}
+.metric-card.orange .mvalue{color:var(--orange)}
+.metric-card.gold .mvalue{color:var(--gold)}
+
+/* ====== 表格 ====== */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{background:var(--xk-light);color:var(--xk-blue);padding:9px 12px;text-align:left;border:1px solid #cce0f0;font-weight:600;white-space:nowrap}
+.data-table td{padding:8px 12px;border:1px solid #e8e8e8;color:#333}
+.data-table tr:hover td{background:#f5f9ff}
+.data-table tr.warning td{background:#fff8f8;color:var(--red);font-weight:600}
+.data-table .actions{display:flex;gap:6px}
+.btn{font-size:12px;padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-weight:600;transition:all .2s}
+.btn-primary{background:var(--xk-green);color:#fff}
+.btn-primary:hover{background:var(--xk-green2)}
+.btn-blue{background:var(--xk-blue);color:#fff}
+.btn-blue:hover{background:var(--xk-blue2)}
+.btn-outline{background:#fff;color:var(--xk-blue);border:1px solid var(--xk-blue)}
+.btn-outline:hover{background:var(--xk-light)}
+.btn-sm{font-size:11px;padding:3px 8px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-green{background:#E1F5EE;color:var(--xk-green2)}
+.badge-blue{background:#E6F1FB;color:var(--xk-blue2)}
+.badge-red{background:#FFE8E8;color:var(--red)}
+.badge-orange{background:#FFF3E0;color:var(--orange)}
+.badge-grey{background:#f0f0f0;color:#666}
+
+/* ====== 表单 ====== */
+.form-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:4px;min-width:160px;flex:1}
+.form-group label{font-size:11px;color:var(--text-secondary);font-weight:600}
+.form-group input,.form-group select,.form-group textarea{font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;width:100%}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--xk-blue)}
+
+/* ====== 搜索框 ====== */
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.search-box{display:flex;gap:6px}
+.search-box input{font-size:13px;padding:7px 12px;border:1px solid var(--border);border-radius:6px;min-width:200px}
+.search-box input:focus{outline:none;border-color:var(--xk-blue)}
+
+/* ====== 标签页 ====== */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
+.tab{padding:8px 16px;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab:hover{color:var(--xk-blue)}
+.tab.active{color:var(--xk-blue);border-bottom-color:var(--xk-blue)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ====== 详情页头部 ====== */
+.detail-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;background:#fff;border-radius:10px;border:1px solid var(--border);padding:20px}
+.detail-title{font-size:20px;font-weight:800;color:var(--xk-blue)}
+.detail-meta{font-size:12px;color:var(--text-secondary);margin-top:4px}
+
+/* ====== 分栏布局 ====== */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* ====== 模态框 ====== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:24px;min-width:480px;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-header h3{font-size:16px;font-weight:700;color:var(--xk-blue)}
+.modal-close{font-size:20px;background:none;border:none;cursor:pointer;color:#999}
+.modal-close:hover{color:var(--xk-blue)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ====== 看板图表区域 ====== */
+.chart-area{height:200px;display:flex;align-items:flex-end;gap:4px;padding:10px 0}
+.chart-bar{flex:1;background:var(--xk-green);border-radius:4px 4px 0 0;min-height:4px;position:relative;transition:all .3s}
+.chart-bar.income{background:var(--xk-green)}
+.chart-bar.expense{background:var(--xk-blue)}
+.chart-bar-label{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:10px;color:#666;white-space:nowrap}
+
+/* ====== 状态颜色 ====== */
+.status-商机{color:#888}
+.status-签约{color:#C9A037}
+.status-施工{color:#E67E22}
+.status-并网{color:#1D9E75}
+.status-运维{color:#0C447C}
+.status-待收款{color:#E67E22}
+.status-部分收款{color:#C9A037}
+.status-已结清{color:#1D9E75}
+.status-待处理{color:#E24B4A}
+
+/* ====== 响应式 ====== */
+@media(max-width:900px){
+  .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;gap:8px}
+  .nav-links{flex-wrap:wrap}
+  .two-col,.three-col{grid-template-columns:1fr}
+  .metric-grid{grid-template-columns:1fr 1fr}
+  .form-row{flex-direction:column}
+}
+
+/* ====== 登录页 ====== */
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0C447C 0%,#185FA5 100%)}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-box h2{text-align:center;color:var(--xk-blue);margin-bottom:8px;font-size:22px}
+.login-box p{text-align:center;color:#888;font-size:13px;margin-bottom:28px}
+.login-box .form-group input{font-size:15px;padding:10px}
+.login-box .btn{width:100%;padding:12px;font-size:15px;margin-top:8px}
+.login-box .hint{text-align:center;font-size:12px;color:#888;margin-top:16px}
+
+/* ====== 进度条 ====== */
+.progress-bar{height:8px;background:#e0eaf5;border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:var(--xk-green);border-radius:4px;transition:width .3s}
