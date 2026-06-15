@@ -241,7 +241,7 @@ def _insert_sample_data(db):
 
 @app.route("/")
 def index():
-    return redirect("/dashboard")
+    return render_template("quotation.html")
 
 @app.route("/login")
 def login_page():
