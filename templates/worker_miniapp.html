@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>施工班组 — 鑫科新能源</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; background: #f0f2f5; color: #1a1a1a; min-height: 100vh; }
+
+/* Header */
+.header { background: #00897b; color: #fff; padding: 16px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.header .title { font-size: 18px; font-weight: 600; }
+.header .user-info { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+
+/* Tab Bar */
+.tab-bar { display: flex; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 64px; z-index: 9; }
+.tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 14px; color: #666; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+.tab.active { color: #00897b; border-bottom-color: #00897b; font-weight: 600; }
+
+/* Content */
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
+
+/* Cards */
+.card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.card-title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px; }
+.card-meta { font-size: 12px; color: #888; margin-bottom: 8px; }
+.card-content { font-size: 13px; color: #444; line-height: 1.6; }
+
+.progress-bar { height: 6px; background: #eee; border-radius: 3px; margin: 8px 0; overflow: hidden; }
+.progress-fill { height: 100%; background: #00897b; border-radius: 3px; transition: width 0.3s; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.b-green { background: #e8f5e9; color: #2e7d32; }
+.b-orange { background: #fff3e0; color: #e65100; }
+.b-red { background: #ffebee; color: #c62828; }
+.b-blue { background: #e3f2fd; color: #1565c0; }
+
+/* Photos */
+.photo-grid { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.photo-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+
+/* Buttons */
+.btn { display: inline-block; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.2s; text-align: center; }
+.btn:active { opacity: 0.85; }
+.btn-primary { background: #00897b; color: #fff; }
+.btn-orange { background: #e65100; color: #fff; }
+.btn-outline { background: transparent; border: 1px solid #00897b; color: #00897b; }
+.btn-full { display: block; width: 100%; }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+
+/* Input form */
+.form-item { margin-bottom: 14px; }
+.form-item label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; }
+.form-item input, .form-item select, .form-item textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: #fff; color: #1a1a1a; outline: none;
+}
+.form-item input:focus, .form-item textarea:focus { border-color: #00897b; }
+.form-item textarea { resize: vertical; min-height: 80px; }
+
+.upload-area { border: 2px dashed #ccc; border-radius: 8px; padding: 20px; text-align: center; color: #888; font-size: 13px; cursor: pointer; }
+.upload-area:active { border-color: #00897b; color: #00897b; }
+.upload-preview { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.upload-preview img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; position: relative; }
+
+/* Stats */
+.stat-row { display: flex; gap: 12px; margin-bottom: 12px; }
+.stat-box { flex: 1; background: #fff; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.stat-box .num { font-size: 24px; font-weight: 700; color: #00897b; }
+.stat-box .label { font-size: 11px; color: #888; margin-top: 2px; }
+
+/* Empty */
+.empty { text-align: center; padding: 40px 20px; color: #aaa; font-size: 14px; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 100; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 16px 16px 0 0; padding: 20px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+
+/* List items */
+.list-item { background: #fff; border-radius: 10px; padding: 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; transition: background 0.15s; }
+.list-item:active { background: #f5f5f5; }
+.list-item .row { display: flex; justify-content: space-between; align-items: center; }
+.list-item .name { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.list-item .meta { font-size: 12px; color: #888; margin-top: 3px; }
+.list-item .arrow { color: #ccc; font-size: 18px; }
+
+/* Login */
+.login-wrap { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 20px; background: linear-gradient(135deg, #00897b, #00695c); }
+.login-box { background: #fff; border-radius: 16px; padding: 32px 24px; }
+.login-box h2 { text-align: center; color: #1a1a1a; margin-bottom: 24px; font-size: 20px; }
+.login-box .form-item input { border: 1px solid #ddd; }
+
+.footer-tip { text-align: center; padding: 16px; font-size: 12px; color: rgba(255,255,255,0.7); }
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="page-login" class="login-wrap page active">
+  <div class="login-box">
+    <h2>⚡ 鑫科施工班组</h2>
+    <div class="form-item">
+      <label>姓名</label>
+      <input type="text" id="loginName" placeholder="请输入姓名" />
+    </div>
+    <div class="form-item">
+      <label>手机号</label>
+      <input type="tel" id="loginPhone" placeholder="请输入手机号" />
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">登录</button>
+  </div>
+  <div class="footer-tip">仅限施工班组人员使用</div>
+</div>
+
+<!-- 工作台 -->
+<div id="page-work" style="display:none;">
+  <div class="header">
+    <div class="title">🏗 施工班组工作台</div>
+    <div class="user-info" id="userDisplay"></div>
+  </div>
+
+  <!-- 统计 -->
+  <div style="padding: 16px; background:#fff; border-bottom:1px solid #eee;">
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="num" id="statReports">0</div>
+        <div class="label">今日日报</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="statRects">0</div>
+        <div class="label">待整改</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="statDone">0</div>
+        <div class="label">已完成</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('tasks')">📋 我的任务</div>
+    <div class="tab" onclick="switchTab('reports')">📝 日报记录</div>
+    <div class="tab" onclick="switchTab('rects')">⚠️ 整改单</div>
+  </div>
+
+  <!-- 我的任务 -->
+  <div class="page active" id="tab-tasks">
+    <div id="taskList"></div>
+  </div>
+
+  <!-- 日报记录 -->
+  <div class="page" id="tab-reports">
+    <div id="reportList"></div>
+  </div>
+
+  <!-- 整改单 -->
+  <div class="page" id="tab-rects">
+    <div id="rectList"></div>
+  </div>
+
+  <!-- 新建日报按钮 -->
+  <div style="position:fixed; bottom:24px; right:24px; z-index:50;">
+    <button class="btn btn-primary" style="border-radius:50px; width:56px; height:56px; font-size:24px; box-shadow: 0 4px 12px rgba(0,137,123,0.4);" onclick="openNewReport()">+</button>
+  </div>
+</div>
+
+<!-- 新建日报弹窗 -->
+<div class="modal-overlay" id="modalReport">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📝 提交施工日报</div>
+    <input type="hidden" id="reportProjectId">
+    <div class="form-item">
+      <label>项目</label>
+      <select id="rProject"></select>
+    </div>
+    <div class="form-item">
+      <label>日期</label>
+      <input type="date" id="rDate">
+    </div>
+    <div class="form-item">
+      <label>天气</label>
+      <select id="rWeather">
+        <option value="晴">☀️ 晴</option>
+        <option value="多云">⛅ 多云</option>
+        <option value="阴">🌥️ 阴</option>
+        <option value="雨">🌧️ 雨</option>
+        <option value="雷阵雨">⛈️ 雷阵雨</option>
+      </select>
+    </div>
+    <div class="form-item">
+      <label>施工进度 (%)</label>
+      <input type="range" id="rProgress" min="0" max="100" value="0" step="5" oninput="document.getElementById('rProgressVal').textContent=this.value+'%'">
+      <div style="text-align:right;font-size:13px;color:#00897b;margin-top:4px;"><span id="rProgressVal">0%</span></div>
+    </div>
+    <div class="form-item">
+      <label>今日工作内容</label>
+      <textarea id="rContent" placeholder="描述今日完成的工作内容..."></textarea>
+    </div>
+    <div class="form-item">
+      <label>现场照片</label>
+      <div class="upload-area" onclick="document.getElementById('rPhotoInput').click()">📷 点击拍照或选择照片</div>
+      <input type="file" id="rPhotoInput" accept="image/*" multiple style="display:none" onchange="handleReportPhotos(this)">
+      <div class="upload-preview" id="rPhotoPreview"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('modalReport').classList.remove('open')">取消</button>
+      <button class="btn btn-primary" style="flex:1" onclick="submitReport()">提交日报</button>
+    </div>
+  </div>
+</div>
+
+<!-- 整改反馈弹窗 -->
+<div class="modal-overlay" id="modalRect">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✅ 整改反馈</div>
+    <input type="hidden" id="rectId">
+    <div class="form-item">
+      <label>整改完成说明</label>
+      <textarea id="rectFeedback" placeholder="描述整改完成情况..."></textarea>
+    </div>
+    <div class="form-item">
+      <label>整改后照片</label>
+      <div class="upload-area" onclick="document.getElementById('rectPhotoInput').click()">📷 上传整改后照片</div>
+      <input type="file" id="rectPhotoInput" accept="image/*" multiple style="display:none" onchange="handleRectPhotos(this)">
+      <div class="upload-preview" id="rectPhotoPreview"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('modalRect').classList.remove('open')">取消</button>
+      <button class="btn btn-orange" style="flex:1" onclick="submitRect()">确认完成</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let currentUser = null;  // { name, phone, builder_name }
+let reportPhotos = [];
+let rectPhotos = [];
+
+// ── Login ──
+function doLogin() {
+  const name = document.getElementById("loginName").value.trim();
+  const phone = document.getElementById("loginPhone").value.trim();
+  if (!name || !phone) { alert("请输入姓名和手机号"); return; }
+  currentUser = { name, phone };
+  localStorage.setItem("xkne_builder", JSON.stringify(currentUser));
+  showWork();
+}
+
+function loadUser() {
+  const s = localStorage.getItem("xkne_builder");
+  if (s) { currentUser = JSON.parse(s); return true; }
+  return false;
+}
+
+// ── Show work ──
+function showWork() {
+  document.getElementById("page-login").style.display = "none";
+  document.getElementById("page-work").style.display = "block";
+  document.getElementById("userDisplay").textContent = "👷 " + currentUser.name + " " + currentUser.phone;
+  loadTasks();
+  loadMyReports();
+  loadMyRects();
+  loadStats();
+}
+
+// ── Tab ──
+function switchTab(name) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  event.target.classList.add("active");
+}
+
+// ── Stats ──
+async function loadStats() {
+  // Today reports
+  const today = new Date().toISOString().split("T")[0];
+  const rRes = await fetch("/api/daily-reports");
+  const reports = await rRes.json();
+  const todayReports = reports.filter(r => r.report_date === today && r.builder_name === currentUser.name);
+  document.getElementById("statReports").textContent = todayReports.length;
+
+  // Rects
+  const rectRes = await fetch("/api/rectifications");
+  const rects = await rectRes.json();
+  const myRects = rects.filter(r => r.assigned_to === currentUser.name || r.assigned_to.includes(currentUser.name));
+  document.getElementById("statRects").textContent = myRects.filter(r => r.status === "待整改").length;
+  document.getElementById("statDone").textContent = myRects.filter(r => r.status === "已完成").length;
+}
+
+// ── Load Projects ──
+async function loadProjectsForSelect() {
+  const res = await fetch("/api/projects");
+  const projects = await res.json();
+  const opts = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+  document.getElementById("rProject").innerHTML = opts;
+}
+
+// ── Tasks ──
+async function loadTasks() {
+  const pRes = await fetch("/api/projects");
+  const projects = await pRes.json();
+  const rRes = await fetch("/api/daily-reports");
+  const reports = await rRes.json();
+
+  // Get tasks = projects that need daily reports
+  const today = new Date().toISOString().split("T")[0];
+  const todayReports = reports.filter(r => r.report_date === today);
+  const reportedIds = new Set(todayReports.map(r => r.project_id));
+
+  const active = projects.filter(p => ["施工", "签约"].includes(p.status));
+
+  if (!active.length) {
+    document.getElementById("taskList").innerHTML = '<div class="empty">暂无进行中的项目任务</div>';
+    return;
+  }
+
+  document.getElementById("taskList").innerHTML = active.map(p => {
+    const hasReport = reportedIds.has(p.id);
+    const badge = hasReport
+      ? '<span class="badge b-green">✓ 已报</span>'
+      : '<span class="badge b-orange">⚡ 待日报</span>';
+    const progress = p.status === "施工" ? (p.progress_percent || 0) : 0;
+    return `<div class="card" onclick="openNewReportFor(${p.id}, '${p.name}')">
+      <div class="row">
+        <div class="name">${p.name}</div>
+        ${badge}
+      </div>
+      <div class="meta">${p.address || ""} &nbsp; 容量：${p.capacity_kw || 0} kW</div>
+      ${progress > 0 ? `<div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div><div class="meta">施工进度 ${progress}%</div>` : ""}
+      <div style="margin-top:10px; font-size:12px; color:#00897b;">点击 ${hasReport ? "查看" : "提交"} 日报 →</div>
+    </div>`;
+  }).join("");
+}
+
+// ── My Reports ──
+async function loadMyReports() {
+  const res = await fetch("/api/daily-reports");
+  const reports = await res.json();
+  const mine = reports.filter(r => r.builder_name === currentUser.name);
+  if (!mine.length) {
+    document.getElementById("reportList").innerHTML = '<div class="empty">暂无日报记录</div>';
+    return;
+  }
+  document.getElementById("reportList").innerHTML = mine.map(r => `
+    <div class="card">
+      <div class="row">
+        <div class="name">${r.project_name || "项目"}</div>
+        <span class="badge ${r.status === "已发送" ? "b-green" : "b-orange"}">${r.status}</span>
+      </div>
+      <div class="meta">${r.report_date} &nbsp; ${r.weather || ""}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${r.progress_percent || 0}%"></div></div>
+      <div class="card-content">${r.content || ""}</div>
+      ${r.photos && r.photos.length ? `<div class="photo-grid">${r.photos.map(p => `<img src="${p}" class="photo-thumb">`).join("")}</div>` : ""}
+    </div>`).join("");
+}
+
+// ── My Rects ──
+async function loadMyRects() {
+  const res = await fetch("/api/rectifications");
+  const rects = await res.json();
+  const mine = rects.filter(r => !r.assigned_to || r.assigned_to.includes(currentUser.name));
+  if (!mine.length) {
+    document.getElementById("rectList").innerHTML = '<div class="empty">暂无整改单</div>';
+    return;
+  }
+  document.getElementById("rectList").innerHTML = mine.map(r => {
+    const sev = r.severity || "一般";
+    const sevCls = sev === "严重" ? "b-red" : sev === "一般" ? "b-orange" : "b-green";
+    const statusCls = r.status === "已完成" ? "b-green" : "b-red";
+    return `<div class="card">
+      <div class="row">
+        <div>
+          <div class="name">${r.rect_title || "整改单"} <span class="badge ${sevCls}">${sev}</span></div>
+          <div class="meta">${r.project_name || ""} &nbsp; 截止：${r.due_date || "未设"}</div>
+        </div>
+        <span class="badge ${statusCls}">${r.status}</span>
+      </div>
+      <div class="card-content">${r.rect_desc || ""}</div>
+      ${r.photos && r.photos.length ? `<div class="photo-grid">${r.photos.map(p => `<img src="${p}" class="photo-thumb">`).join("")}</div>` : ""}
+      ${r.status !== "已完成" ? `<button class="btn btn-orange btn-sm" style="margin-top:10px;" onclick="openRectFeedback(${r.id})">反馈整改</button>` : ""}
+    </div>`;
+  }).join("");
+}
+
+// ── New Report ──
+async function openNewReport() {
+  await loadProjectsForSelect();
+  reportPhotos = [];
+  document.getElementById("rDate").value = new Date().toISOString().split("T")[0];
+  document.getElementById("rProgress").value = 0;
+  document.getElementById("rProgressVal").textContent = "0%";
+  document.getElementById("rContent").value = "";
+  document.getElementById("rPhotoPreview").innerHTML = "";
+  document.getElementById("reportProjectId").value = "";
+  document.getElementById("modalReport").classList.add("open");
+}
+
+function openNewReportFor(pid, pname) {
+  openNewReport();
+  document.getElementById("reportProjectId").value = pid;
+  document.getElementById("rProject").innerHTML = `<option value="${pid}">${pname}</option>`;
+}
+
+function handleReportPhotos(input) {
+  for (const f of input.files) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      reportPhotos.push(e.target.result);
+      document.getElementById("rPhotoPreview").innerHTML += `<img src="${e.target.result}">`;
+    };
+    reader.readAsDataURL(f);
+  }
+}
+
+async function submitReport() {
+  const project_id = parseInt(document.getElementById("rProject").value);
+  if (!project_id) { alert("请选择项目"); return; }
+  const payload = {
+    project_id,
+    report_date: document.getElementById("rDate").value,
+    weather: document.getElementById("rWeather").value,
+    builder_name: currentUser.name,
+    progress_percent: parseInt(document.getElementById("rProgress").value),
+    content: document.getElementById("rContent").value,
+    photos: reportPhotos,
+    status: "已发送"
+  };
+  await fetch("/api/daily-reports", {
+    method: "POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+  document.getElementById("modalReport").classList.remove("open");
+  loadTasks();
+  loadMyReports();
+  loadStats();
+}
+
+// ── Rect Feedback ──
+function openRectFeedback(id) {
+  rectPhotos = [];
+  document.getElementById("rectId").value = id;
+  document.getElementById("rectFeedback").value = "";
+  document.getElementById("rectPhotoPreview").innerHTML = "";
+  document.getElementById("modalRect").classList.add("open");
+}
+
+function handleRectPhotos(input) {
+  for (const f of input.files) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      rectPhotos.push(e.target.result);
+      document.getElementById("rectPhotoPreview").innerHTML += `<img src="${e.target.result}">`;
+    };
+    reader.readAsDataURL(f);
+  }
+}
+
+async function submitRect() {
+  const id = parseInt(document.getElementById("rectId").value);
+  await fetch(`/api/rectifications/${id}`, {
+    method: "PUT", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      status: "已完成",
+      整改_feedback: document.getElementById("rectFeedback").value,
+      feedback_photos: rectPhotos
+    })
+  });
+  document.getElementById("modalRect").classList.remove("open");
+  loadMyRects();
+  loadStats();
+}
+
+// ── Init ──
+(function init() {
+  if (loadUser()) showWork();
+  loadProjectsForSelect();
+})();
+</script>
+</body>
+</html>

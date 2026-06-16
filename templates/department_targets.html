@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>部门目标管理 — 鑫科新能源</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'PingFang SC', sans-serif; background: #0f1923; color: #e8eaed; }
+.header { background: #1a2535; border-bottom: 1px solid #2a3a4a; padding: 14px 24px; }
+.header h1 { font-size: 17px; font-weight: 600; }
+.nav { background: #1a2535; border-bottom: 1px solid #2a3a4a; padding: 0 24px; display: flex; gap: 4px; }
+.nav a { padding: 10px 16px; color: #7ab; text-decoration: none; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.nav a:hover, .nav a.active { color: #4fc3f7; border-bottom-color: #4fc3f7; }
+.main { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+
+.toolbar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+.toolbar select { padding: 8px 12px; background: #1a2535; border: 1px solid #2a3a4a; border-radius: 6px; color: #e8eaed; font-size: 14px; }
+.btn { padding: 8px 16px; background: #00897b; border: none; border-radius: 6px; color: #fff; font-size: 13px; cursor: pointer; }
+.btn:hover { opacity: 0.9; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-outline { background: transparent; border: 1px solid #2a3a4a; color: #7ab; }
+
+/* KPI Cards */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpi-card { background: #1a2535; border-radius: 10px; padding: 18px; text-align: center; }
+.kpi-card .dept { font-size: 13px; color: #7ab; margin-bottom: 6px; }
+.kpi-card .rate { font-size: 32px; font-weight: 700; }
+.kpi-card .rate.good { color: #4caf50; }
+.kpi-card .rate.ok   { color: #ffa726; }
+.kpi-card .rate.bad  { color: #ef5350; }
+.kpi-card .sub { font-size: 12px; color: #7ab; margin-top: 4px; }
+
+/* Table */
+.table-wrap { background: #1a2535; border-radius: 10px; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 12px 16px; background: #111d2a; color: #7ab; font-size: 12px; font-weight: 500; border-bottom: 1px solid #2a3a4a; }
+td { padding: 10px 16px; border-bottom: 1px solid #1a2535; font-size: 13px; color: #c8d8e0; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #1e2e3e; }
+.achievement { font-weight: 700; }
+.ach-good { color: #4caf50; }
+.ach-ok   { color: #ffa726; }
+.ach-bad  { color: #ef5350; }
+.progress-cell { width: 120px; }
+.prog { height: 5px; background: #0f1923; border-radius: 3px; margin-top: 4px; }
+.prog-fill { height: 5px; border-radius: 3px; }
+.prog-good { background: #4caf50; }
+.prog-ok   { background: #ffa726; }
+.prog-bad  { background: #ef5350; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay.open { display: flex; }
+.modal { background: #1a2535; border-radius: 12px; padding: 28px; width: 500px; max-width: 95vw; }
+.modal-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 18px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.form-group label { font-size: 12px; color: #7ab; }
+.form-group input, .form-group select { padding: 8px 12px; background: #0f1923; border: 1px solid #2a3a4a; border-radius: 6px; color: #e8eaed; font-size: 14px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<div class="header"><h1>🎯 部门目标管理</h1></div>
+<div class="nav">
+  <a href="/dashboard">看板</a>
+  <a href="/projects">项目管理</a>
+  <a href="/investment-calculator">📊 投决计算器</a>
+  <a href="/construction/daily-reports">📋 施工日报</a>
+  <a href="#" class="active">🎯 部门目标</a>
+</div>
+
+<div class="main">
+  <div class="toolbar">
+    <select id="selYear" onchange="loadAchievement()">
+      <option value="2026">2026年</option>
+      <option value="2025">2025年</option>
+    </select>
+    <select id="selMonth" onchange="loadAchievement()">
+      <option value="6" selected>6月</option>
+    </select>
+    <button class="btn" onclick="openSetTarget()">设置目标</button>
+    <button class="btn btn-outline" onclick="openRecordPerf()">录入业绩</button>
+  </div>
+
+  <!-- KPI达成率卡片 -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- 明细表 -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>部门</th>
+          <th>周期</th>
+          <th>目标(kW)</th>
+          <th>实际(kW)</th>
+          <th>达成率</th>
+          <th>进度</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 设置目标弹窗 -->
+<div class="modal-overlay" id="modalTarget">
+  <div class="modal">
+    <div class="modal-title">设置部门目标</div>
+    <div class="form-group">
+      <label>部门</label>
+      <select id="tDept"></select>
+    </div>
+    <div class="form-group">
+      <label>目标类型</label>
+      <select id="tType">
+        <option value="装机容量">装机容量 (kW)</option>
+        <option value="签约额">签约额 (万元)</option>
+        <option value="回款额">回款额 (万元)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>年度目标</label>
+      <input type="number" id="tYearVal" placeholder="年度目标值">
+    </div>
+    <div class="form-group">
+      <label>Q1 目标</label>
+      <input type="number" id="tQ1Val" placeholder="Q1目标">
+    </div>
+    <div class="form-group">
+      <label>Q2 目标</label>
+      <input type="number" id="tQ2Val" placeholder="Q2目标">
+    </div>
+    <div class="form-group">
+      <label>当月目标</label>
+      <input type="number" id="tMonthVal" placeholder="当月目标">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('modalTarget').classList.remove('open')">取消</button>
+      <button class="btn" onclick="submitTarget()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 录入业绩弹窗 -->
+<div class="modal-overlay" id="modalPerf">
+  <div class="modal">
+    <div class="modal-title">录入实际业绩</div>
+    <div class="form-group">
+      <label>部门</label>
+      <select id="pDept"></select>
+    </div>
+    <div class="form-group">
+      <label>指标类型</label>
+      <select id="pType">
+        <option value="装机容量">装机容量 (kW)</option>
+        <option value="签约额">签约额 (万元)</option>
+        <option value="回款额">回款额 (万元)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>年</label>
+      <input type="number" id="pYear" value="2026">
+    </div>
+    <div class="form-group">
+      <label>月</label>
+      <input type="number" id="pMonth" value="6" min="1" max="12">
+    </div>
+    <div class="form-group">
+      <label>实际值</label>
+      <input type="number" id="pVal" placeholder="实际完成值">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('modalPerf').classList.remove('open')">取消</button>
+      <button class="btn" onclick="submitPerf()">录入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const now = new Date();
+document.getElementById("selYear").value = now.getFullYear();
+document.getElementById("selMonth").innerHTML = Array.from({length: now.getMonth()+1}, (_, i) =>
+  `<option value="${i+1}">${i+1}月</option>`).join("");
+document.getElementById("selMonth").value = now.getMonth() + 1;
+
+let depts = [];
+let achievement = [];
+
+async function init() {
+  const dRes = await fetch("/api/departments");
+  depts = await dRes.json();
+  const opts = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
+  document.getElementById("tDept").innerHTML = opts;
+  document.getElementById("pDept").innerHTML = opts;
+  loadAchievement();
+}
+
+async function loadAchievement() {
+  const year = document.getElementById("selYear").value;
+  const month = document.getElementById("selMonth").value;
+  const res = await fetch(`/api/dept-targets/achievement?year=${year}&month=${month}`);
+  achievement = await res.json();
+  renderKPI(achievement);
+  renderTable(achievement, year, month);
+}
+
+function renderKPI(data) {
+  document.getElementById("kpiRow").innerHTML = data.map(d => {
+    const rate = d.year_rate || 0;
+    const cls = rate >= 80 ? "good" : rate >= 50 ? "ok" : "bad";
+    return `<div class="kpi-card">
+      <div class="dept">${d.dept_name}</div>
+      <div class="rate ${cls}">${rate}%</div>
+      <div class="sub">年度达成 ${d.year_actual || 0} / ${d.year_target || 0} kW</div>
+      <div style="font-size:12px;color:#7ab;margin-top:6px;">Q达成 ${d.quarter_actual||0}/${d.quarter_target||0} &nbsp; 月达成 ${d.month_actual||0}/${d.month_target||0}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderTable(data, year, month) {
+  const quarter = Math.ceil(month / 3);
+  document.getElementById("tbody").innerHTML = data.flatMap(d => {
+    const rows = [];
+    // 年度
+    rows.push(makeRow(d, "年度", d.year_target, d.year_actual, d.year_rate, `?year=${year}`));
+    // 季度
+    rows.push(makeRow(d, `Q${quarter}`, d.quarter_target, d.quarter_actual, d.quarter_rate, `?year=${year}`));
+    // 月度
+    rows.push(makeRow(d, `${month}月`, d.month_target, d.month_actual, d.month_rate, `?year=${year}&month=${month}`));
+    return rows;
+  }).join("");
+}
+
+function makeRow(d, period, target, actual, rate, qstr) {
+  const rateVal = rate || 0;
+  const cls = rateVal >= 80 ? "ach-good" : rateVal >= 50 ? "ach-ok" : "ach-bad";
+  const progCls = rateVal >= 80 ? "prog-good" : rateVal >= 50 ? "prog-ok" : "prog-bad";
+  return `<tr>
+    <td>${d.dept_name}</td>
+    <td>${period}</td>
+    <td>${target || 0}</td>
+    <td>${actual || 0}</td>
+    <td class="achievement ${cls}">${rateVal}%</td>
+    <td class="progress-cell">
+      <div class="prog"><div class="prog-fill ${progCls}" style="width:${Math.min(rateVal, 100)}%"></div></div>
+    </td>
+    <td><button class="btn btn-sm btn-outline" onclick="editTarget(${d.dept_id})">编辑</button></td>
+  </tr>`;
+}
+
+function openSetTarget() { document.getElementById("modalTarget").classList.add("open"); }
+function openRecordPerf() { document.getElementById("modalPerf").classList.add("open"); }
+
+async function submitTarget() {
+  const year = parseInt(document.getElementById("selYear").value);
+  const month = parseInt(document.getElementById("selMonth").value);
+  const quarter = Math.ceil(month / 3);
+  const deptId = parseInt(document.getElementById("tDept").value);
+  const type = document.getElementById("tType").value;
+  const payload = (val, mo, q) => ({
+    dept_id: deptId, target_year: year, target_month: mo, target_quarter: q,
+    target_type: type, target_value: val, unit: "kW"
+  });
+  const yv = parseFloat(document.getElementById("tYearVal").value) || 0;
+  const q1v = parseFloat(document.getElementById("tQ1Val").value) || 0;
+  const q2v = parseFloat(document.getElementById("tQ2Val").value) || 0;
+  const mv = parseFloat(document.getElementById("tMonthVal").value) || 0;
+  for (const [val, mo, q] of [[yv, 0, 0],[q1v, 0, 1],[q2v, 0, 2],[mv, month, 0]]) {
+    if (val > 0) {
+      await fetch("/api/dept-targets", {
+        method: "POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload(val, mo, q))
+      });
+    }
+  }
+  document.getElementById("modalTarget").classList.remove("open");
+  loadAchievement();
+}
+
+async function submitPerf() {
+  await fetch("/api/dept-performance", {
+    method: "POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      dept_id: parseInt(document.getElementById("pDept").value),
+      metric_type: document.getElementById("pType").value,
+      record_year: parseInt(document.getElementById("pYear").value),
+      record_month: parseInt(document.getElementById("pMonth").value),
+      metric_value: parseFloat(document.getElementById("pVal").value) || 0
+    })
+  });
+  document.getElementById("modalPerf").classList.remove("open");
+  loadAchievement();
+}
+
+init();
+</script>
+</body>
+</html>

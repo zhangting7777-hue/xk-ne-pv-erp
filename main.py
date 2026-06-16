@@ -12,9 +12,13 @@ from datetime import datetime, date, timedelta
 from pathlib import Path
 import random
 
-from flask import Flask, request, jsonify, g, render_template, redirect
+from flask import Flask, request, jsonify, g, render_template, redirect, session, send_from_directory
 from sales_routes import register_sales_routes
 from station_routes import register_station_routes
+from investment_calculator import register_investment_routes
+from department_targets import register_department_target_routes
+from construction_routes import register_construction_routes
+from dept_isolation import register_dept_isolation
 
 app = Flask(__name__, template_folder="templates")
 app.config['SECRET_KEY'] = 'xkne-erp-secret-2026'
@@ -241,7 +245,7 @@ def _insert_sample_data(db):
 
 @app.route("/")
 def index():
-    return render_template("quotation.html")
+    return render_template("app_home.html")
 
 @app.route("/login")
 def login_page():
@@ -306,6 +310,26 @@ def materials_purchase_page():
 @app.route("/materials/stock")
 def materials_stock_page():
     return render_template("materials_stock.html")
+
+@app.route("/investment-calculator")
+def investment_calculator_page():
+    return render_template("investment_calculator.html")
+
+@app.route("/department-targets")
+def dept_targets_page():
+    return render_template("department_targets.html")
+
+@app.route("/worker")
+def worker_page():
+    return render_template("worker_miniapp.html")
+
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory(BASE_DIR, "manifest.json")
+
+@app.route("/service-worker.js")
+def service_worker():
+    return send_from_directory(BASE_DIR / "static", "sw.js")
 
 # ====== 电站运维 page routes ======
 @app.route("/station")
@@ -683,6 +707,10 @@ if __name__ == "__main__":
         init_db()
         register_sales_routes(app, get_db)
         register_station_routes(app, get_db)
+        register_investment_routes(app, get_db)
+        register_department_target_routes(app, get_db)
+        register_construction_routes(app, get_db)
+        register_dept_isolation(app, get_db)
     port = int(os.environ.get("PORT", 8000))
     print("=" * 55)
     print("  鑫科新能源光伏企业全链路ERP系统")

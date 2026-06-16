@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目投资决策计算器 — 鑫科新能源</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'PingFang SC', sans-serif; background: #0f1923; color: #e8eaed; min-height: 100vh; }
+
+.header { background: #1a2535; border-bottom: 1px solid #2a3a4a; padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
+.header h1 { font-size: 18px; font-weight: 600; color: #fff; }
+.header .subtitle { font-size: 12px; color: #7ab; margin-left: auto; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: 380px 1fr; gap: 24px; }
+
+/* ── 左侧输入面板 ── */
+.input-panel { background: #1a2535; border-radius: 12px; padding: 24px; }
+.panel-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #2a3a4a; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; color: #8ab4c4; margin-bottom: 5px; }
+.form-group label span { color: #f44336; }
+input[type="number"], select, textarea {
+  width: 100%; padding: 8px 12px; background: #0f1923; border: 1px solid #2a3a4a;
+  border-radius: 6px; color: #e8eaed; font-size: 14px; outline: none;
+  transition: border-color 0.2s;
+}
+input[type="number"]:focus, select:focus { border-color: #4fc3f7; }
+input[type="range"] { width: 100%; accent-color: #4fc3f7; }
+.range-val { font-size: 13px; color: #4fc3f7; float: right; }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.btn-calc {
+  width: 100%; padding: 12px; background: linear-gradient(135deg, #00897b, #00695c);
+  border: none; border-radius: 8px; color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.2s; margin-top: 8px;
+}
+.btn-calc:hover { opacity: 0.9; }
+.btn-save {
+  width: 48%; padding: 8px; background: #1e3a5f; border: 1px solid #2a5a8a;
+  border-radius: 6px; color: #8ab4c4; font-size: 13px; cursor: pointer; margin-top: 8px;
+}
+.btn-save:hover { background: #1e4a7a; }
+
+/* ── 右侧结果面板 ── */
+.result-panel { display: flex; flex-direction: column; gap: 20px; }
+
+/* KPI 卡片 */
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.kpi-card { background: #1a2535; border-radius: 12px; padding: 20px; text-align: center; }
+.kpi-card .label { font-size: 12px; color: #7ab; margin-bottom: 8px; }
+.kpi-card .value { font-size: 28px; font-weight: 700; color: #fff; }
+.kpi-card .unit { font-size: 13px; color: #7ab; }
+.kpi-card.highlight { background: linear-gradient(135deg, #0d3a4a, #0a2a38); border: 1px solid #1a5a7a; }
+.kpi-card.highlight .value { color: #4fc3f7; }
+.kpi-card.warning .value { color: #ffa726; }
+.kpi-card.danger .value { color: #ef5350; }
+
+/* 详细结果 */
+.detail-grid { background: #1a2535; border-radius: 12px; padding: 20px; }
+.detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e2e3e; font-size: 13px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-row .dt { color: #7ab; }
+.detail-row .dd { color: #e8eaed; font-weight: 500; }
+.detail-row .dd.good { color: #4caf50; }
+.detail-row .dd.warn { color: #ffa726; }
+.detail-row .dd.bad { color: #ef5350; }
+
+/* 图表区 */
+.chart-panel { background: #1a2535; border-radius: 12px; padding: 20px; }
+.chart-panel .chart-title { font-size: 14px; color: #8ab4c4; margin-bottom: 16px; }
+canvas { width: 100% !important; }
+
+/* 历史方案 */
+.history-panel { background: #1a2535; border-radius: 12px; padding: 20px; }
+.history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.history-table th { text-align: left; color: #7ab; padding: 8px 12px; border-bottom: 1px solid #2a3a4a; }
+.history-table td { padding: 8px 12px; border-bottom: 1px solid #1e2e3e; color: #c8d8e0; }
+.history-table tr:hover { background: #1e2e3e; cursor: pointer; }
+.irr-tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.irr-good { background: #1b3a2a; color: #4caf50; }
+.irr-ok  { background: #3a2a1a; color: #ffa726; }
+.irr-bad { background: #3a1a1a; color: #ef5350; }
+
+.tip-box { background: #1a2a3a; border-left: 3px solid #4fc3f7; padding: 12px 16px; border-radius: 0 6px 6px 0; font-size: 12px; color: #7ab; margin-top: 16px; }
+
+@media(max-width: 768px) {
+  .container { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ 项目投资决策计算器</h1>
+  <span class="subtitle">鑫科新能源 ERP</span>
+</div>
+
+<div class="container">
+
+  <!-- 左侧：参数输入 -->
+  <div class="input-panel">
+    <div class="panel-title">📊 参数设置</div>
+
+    <div class="form-group">
+      <label>项目名称</label>
+      <input type="text" id="scenarioName" placeholder="如：福州某工厂 300kW EMC">
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>装机容量 (kW)</label>
+        <input type="number" id="capacity_kw" value="300" step="10">
+      </div>
+      <div class="form-group">
+        <label>总投资 (万元)</label>
+        <input type="number" id="invest_total" value="75" step="1">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>电价 (元/kWh)</label>
+        <input type="number" id="tariff" value="0.73" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>年发电量 (万kWh)</label>
+        <input type="number" id="annual_gen" value="36" step="1">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>年运维成本 (万元/年)</label>
+        <input type="number" id="opex_year" value="2.0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label>所得税率 (%)</label>
+        <input type="number" id="tax_rate" value="15" step="0.5">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>补贴年限 (年)</label>
+        <input type="number" id="sub_year" value="5" step="1" min="0">
+      </div>
+      <div class="form-group">
+        <label>补贴金额 (元/kWh)</label>
+        <input type="number" id="sub_per_kwh" value="0.05" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>折旧年限 (年)</label>
+        <input type="number" id="deprec_years" value="20" step="1" min="1">
+      </div>
+      <div class="form-group">
+        <label>贷款比例 (%)</label>
+        <input type="number" id="debt_ratio" value="0" step="5" min="0" max="100">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>贷款利率 (%)</label>
+        <input type="number" id="loan_rate" value="4.9" step="0.1" min="0">
+      </div>
+      <div class="form-group">
+        <label>贷款年限 (年)</label>
+        <input type="number" id="loan_years" value="10" step="1" min="1">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>备注说明</label>
+      <textarea id="note" rows="2" placeholder="项目特殊说明..."></textarea>
+    </div>
+
+    <button class="btn-calc" onclick="calculate()">▶ 计算 IRR & 回本年限</button>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-save" onclick="saveScenario()">💾 保存方案</button>
+      <button class="btn-save" onclick="loadDefaults()">📋 常用模板</button>
+    </div>
+
+    <div class="tip-box">
+      💡 <b>参考值</b>：IRR > 10% 为优质项目，8-10% 为良好，< 8% 需谨慎。
+      回本年限 < 8年 为优，8-12年为良好。
+    </div>
+  </div>
+
+  <!-- 右侧：结果展示 -->
+  <div class="result-panel">
+
+    <!-- KPI 卡片 -->
+    <div class="kpi-grid">
+      <div class="kpi-card highlight">
+        <div class="label">内部收益率 (IRR)</div>
+        <div class="value" id="irrVal">—</div>
+        <div class="unit">%</div>
+      </div>
+      <div class="kpi-card" id="paybackCard">
+        <div class="label">静态回本年限</div>
+        <div class="value" id="paybackVal">—</div>
+        <div class="unit">年</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">25年净现金流</div>
+        <div class="value" id="netCfVal">—</div>
+        <div class="unit">万元</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">年化收益率</div>
+        <div class="value" id="roiVal">—</div>
+        <div class="unit">%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">年发电收入</div>
+        <div class="value" id="revVal">—</div>
+        <div class="unit">万元/年</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">年运营成本</div>
+        <div class="value" id="costVal">—</div>
+        <div class="unit">万元/年</div>
+      </div>
+    </div>
+
+    <!-- 详细指标 -->
+    <div class="detail-grid">
+      <div class="panel-title" style="font-size:14px; margin-bottom:12px;">📋 核心指标明细</div>
+      <div class="detail-row"><span class="dt">总投资额</span><span class="dd" id="dInvest">—</span></div>
+      <div class="detail-row"><span class="dt">装机容量</span><span class="dd" id="dCap">—</span></div>
+      <div class="detail-row"><span class="dt">单位投资成本</span><span class="dd" id="dUnitCost">—</span></div>
+      <div class="detail-row"><span class="dt">年发电量</span><span class="dd" id="dGen">—</span></div>
+      <div class="detail-row"><span class="dt">标杆电价</span><span class="dd" id="dTariff">—</span></div>
+      <div class="detail-row"><span class="dt">年发电收入</span><span class="dd good" id="dRev">—</span></div>
+      <div class="detail-row"><span class="dt">年运维成本</span><span class="dd warn" id="dOpex">—</span></div>
+      <div class="detail-row"><span class="dt">年折旧</span><span class="dd" id="dDec">—</span></div>
+      <div class="detail-row"><span class="dt">25年累计收入</span><span class="dd good" id="dTotalRev">—</span></div>
+      <div class="detail-row"><span class="dt">25年累计成本</span><span class="dd warn" id="dTotalCost">—</span></div>
+    </div>
+
+    <!-- 现金流图表 -->
+    <div class="chart-panel">
+      <div class="chart-title">📈 累计现金流曲线（回本分析）</div>
+      <canvas id="cfChart" height="200"></canvas>
+    </div>
+
+    <!-- 历史方案 -->
+    <div class="history-panel">
+      <div class="panel-title" style="font-size:14px; margin-bottom:12px;">📁 已保存方案</div>
+      <table class="history-table">
+        <thead><tr>
+          <th>方案名称</th><th>容量(kW)</th><th>投资(万)</th><th>IRR</th><th>回本(年)</th><th>操作</th>
+        </tr></thead>
+        <tbody id="historyBody"><tr><td colspan="6" style="color:#7ab;text-align:center;">加载中...</td></tr></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── 计算 ──
+async function calculate() {
+  const payload = {
+    capacity_kw:   parseFloat(document.getElementById("capacity_kw").value),
+    invest_total:  parseFloat(document.getElementById("invest_total").value),
+    tariff:       parseFloat(document.getElementById("tariff").value),
+    annual_gen:   parseFloat(document.getElementById("annual_gen").value),
+    opex_year:    parseFloat(document.getElementById("opex_year").value),
+    tax_rate:     parseFloat(document.getElementById("tax_rate").value),
+    sub_year:     parseFloat(document.getElementById("sub_year").value),
+    sub_per_kwh:  parseFloat(document.getElementById("sub_per_kwh").value),
+    deprec_years: parseInt(document.getElementById("deprec_years").value),
+    debt_ratio:   parseFloat(document.getElementById("debt_ratio").value),
+    loan_rate:    parseFloat(document.getElementById("loan_rate").value),
+    loan_years:   parseInt(document.getElementById("loan_years").value),
+  };
+
+  const res = await fetch("/api/investment/calc", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const r = await res.json();
+  if (!r.ok) return alert("计算失败");
+
+  // KPI
+  document.getElementById("irrVal").textContent = r.irr != null ? r.irr + "%" : "N/A";
+  document.getElementById("paybackVal").textContent = r.payback_years != null ? r.payback_years + "年" : ">25年";
+  document.getElementById("netCfVal").textContent = r.total_net_cf != null ? r.total_net_cf.toFixed(0) : "N/A";
+  document.getElementById("roiVal").textContent = r.annual_roi != null ? r.annual_roi + "%" : "N/A";
+  document.getElementById("revVal").textContent = r.annual_revenue != null ? r.annual_revenue.toFixed(1) : "—";
+  document.getElementById("costVal").textContent = r.annual_cost != null ? r.annual_cost.toFixed(1) : "—";
+
+  // 颜色
+  const irrCard = document.querySelector(".kpi-card.highlight");
+  const irrVal  = parseFloat(r.irr);
+  if (irrVal >= 10) irrCard.style.border = "1px solid #2e7d32";
+  else if (irrVal >= 8) irrCard.style.border = "1px solid #f57c00";
+  else irrCard.style.border = "1px solid #c62828";
+
+  const pbCard = document.getElementById("paybackCard");
+  const pbVal  = parseFloat(r.payback_years);
+  if (pbVal && pbVal <= 8) { pbCard.style.border = "1px solid #2e7d32"; }
+  else if (pbVal && pbVal <= 12) { pbCard.style.border = "1px solid #f57c00"; }
+  else if (pbVal) { pbCard.style.border = "1px solid #c62828"; }
+
+  // 明细
+  document.getElementById("dInvest").textContent   = r.invest_total + " 万元";
+  document.getElementById("dCap").textContent      = r.capacity_kw + " kW";
+  document.getElementById("dUnitCost").textContent = r.capacity_kw > 0 ? (r.invest_total / r.capacity_kw * 10000).toFixed(2) + " 元/kW" : "—";
+  document.getElementById("dGen").textContent      = payload.annual_gen + " 万kWh";
+  document.getElementById("dTariff").textContent  = payload.tariff + " 元/kWh";
+  document.getElementById("dRev").textContent      = r.annual_revenue + " 万元";
+  document.getElementById("dOpex").textContent   = payload.opex_year + " 万元/年";
+  document.getElementById("dDec").textContent     = r.deprec_cost + " 万元/年";
+  document.getElementById("dTotalRev").textContent = r.total_revenue_25y.toFixed(0) + " 万元";
+  document.getElementById("dTotalCost").textContent= r.total_cost_25y.toFixed(0) + " 万元";
+
+  // 图表
+  drawChart(r.yearly, r.invest_total);
+}
+
+// ── 绘制累计现金流图 ──
+let chartInstance = null;
+function drawChart(yearly, invest_total) {
+  const ctx = document.getElementById("cfChart").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+
+  const labels = yearly.map(y => "第" + y.year + "年");
+  const cumCfs  = yearly.map(y => y.cum_cf);
+
+  chartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "累计现金流（万元）",
+          data: cumCfs,
+          borderColor: "#4fc3f7",
+          backgroundColor: "rgba(79,195,247,0.08)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: cumCfs.map(v => v >= 0 ? "#4caf50" : "#ef5350"),
+        },
+        {
+          label: "投资线",
+          data: yearly.map(() => -invest_total),
+          borderColor: "#f44336",
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: "#8ab4c4" } } },
+      scales: {
+        x: { ticks: { color: "#7ab", maxTicksLimit: 13 }, grid: { color: "#1e2e3e" } },
+        y: { ticks: { color: "#7ab", callback: v => v.toFixed(0) + "万" }, grid: { color: "#1e2e3e" } }
+      }
+    }
+  });
+}
+
+// ── 保存方案 ──
+async function saveScenario() {
+  const payload = {
+    name: document.getElementById("scenarioName").value || "未命名方案",
+    capacity_kw:  parseFloat(document.getElementById("capacity_kw").value),
+    invest_total:  parseFloat(document.getElementById("invest_total").value),
+    tariff:        parseFloat(document.getElementById("tariff").value),
+    annual_gen:    parseFloat(document.getElementById("annual_gen").value),
+    opex_year:     parseFloat(document.getElementById("opex_year").value),
+    tax_rate:      parseFloat(document.getElementById("tax_rate").value),
+    sub_year:      parseFloat(document.getElementById("sub_year").value),
+    sub_per_kwh:  parseFloat(document.getElementById("sub_per_kwh").value),
+    note: document.getElementById("note").value,
+    irr_result: 0, payback_years: 0
+  };
+  const res = await fetch("/api/investment/calc", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+  const r = await res.json();
+  if (r.ok) {
+    payload.irr_result = r.irr || 0;
+    payload.payback_years = r.payback_years || 0;
+  }
+  await fetch("/api/investment/scenarios", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+  loadHistory();
+}
+
+// ── 加载历史 ──
+async function loadHistory() {
+  const res = await fetch("/api/investment/scenarios");
+  const list = await res.json();
+  const tbody = document.getElementById("historyBody");
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" style="color:#7ab;text-align:center;">暂无保存记录</td></tr>'; return; }
+  tbody.innerHTML = list.map(s => {
+    const irr = s.irr_result || 0;
+    const cls = irr >= 10 ? "irr-good" : irr >= 8 ? "irr-ok" : "irr-bad";
+    return `<tr onclick="loadScenario(${s.id})">
+      <td>${s.name}</td>
+      <td>${s.capacity_kw}</td>
+      <td>${s.invest_total}</td>
+      <td><span class="irr-tag ${cls}">${irr.toFixed(1)}%</span></td>
+      <td>${s.payback_years ? s.payback_years + "年" : "N/A"}</td>
+      <td><button onclick="event.stopPropagation(); delScenario(${s.id})" style="background:#c62828;border:none;color:#fff;padding:2px 8px;border-radius:4px;cursor:pointer;">删</button></td>
+    </tr>`;
+  }).join("");
+}
+
+async function loadScenario(id) {
+  const res = await fetch("/api/investment/scenarios");
+  const list = await res.json();
+  const s = list.find(x => x.id == id);
+  if (!s) return;
+  document.getElementById("scenarioName").value = s.name;
+  document.getElementById("capacity_kw").value  = s.capacity_kw;
+  document.getElementById("invest_total").value = s.invest_total;
+  document.getElementById("tariff").value       = s.tariff;
+  document.getElementById("annual_gen").value   = s.annual_gen;
+  document.getElementById("opex_year").value    = s.opex_year;
+  document.getElementById("tax_rate").value     = s.tax_rate;
+  document.getElementById("sub_year").value     = s.sub_year;
+  document.getElementById("sub_per_kwh").value  = s.sub_per_kwh;
+  document.getElementById("note").value         = s.note || "";
+  calculate();
+}
+
+async function delScenario(id) {
+  if (!confirm("删除该方案？")) return;
+  await fetch(`/api/investment/scenarios/${id}`, { method: "DELETE" });
+  loadHistory();
+}
+
+// ── 常用模板 ──
+function loadDefaults() {
+  document.getElementById("scenarioName").value = "EMC合同能源管理模式";
+  document.getElementById("capacity_kw").value  = 300;
+  document.getElementById("invest_total").value = 75;
+  document.getElementById("tariff").value       = 0.73;
+  document.getElementById("annual_gen").value   = 36;
+  document.getElementById("opex_year").value    = 2.0;
+  document.getElementById("tax_rate").value     = 15;
+  document.getElementById("sub_year").value     = 0;
+  document.getElementById("sub_per_kwh").value  = 0;
+  document.getElementById("deprec_years").value  = 20;
+  document.getElementById("debt_ratio").value   = 0;
+}
+
+// 默认计算一次
+loadHistory();
+</script>
+</body>
+</html>

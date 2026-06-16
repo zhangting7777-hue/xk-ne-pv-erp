@@ -1,0 +1,47 @@
+{
+  "name": "鑫科新能源 ERP",
+  "short_name": "鑫科ERP",
+  "description": "光伏企业全链路数字化管理平台",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1628",
+  "theme_color": "#00695c",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "投决计算器",
+      "url": "/investment-calculator",
+      "description": "IRR与回本年限计算"
+    },
+    {
+      "name": "施工日报",
+      "url": "/construction/daily-reports",
+      "description": "提交施工日报"
+    },
+    {
+      "name": "班组入口",
+      "url": "/worker",
+      "description": "外部班组手机端"
+    }
+  ]
+}

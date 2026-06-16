@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>鑫科新能源 ERP</title>
+<meta name="theme-color" content="#00695c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="鑫科ERP">
+<meta name="apple-touch-icon" content="/static/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="鑫科ERP">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'PingFang SC', sans-serif; background: #0a1628; color: #e8eaed; min-height: 100vh; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+
+/* ── 顶部 ── */
+.header { background: linear-gradient(135deg, #00695c, #004d40); padding: 24px 20px 40px; position: relative; overflow: hidden; }
+.header::before { content: ''; position: absolute; top: -30px; right: -30px; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+.header .logo { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.header .sub { font-size: 12px; color: rgba(255,255,255,0.7); }
+.header .user-badge { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 12px; color: #fff; }
+
+/* ── 统计概览 ── */
+.overview { margin: -24px 16px 16px; background: #1a2d42; border-radius: 16px; padding: 20px; position: relative; z-index: 1; }
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.stat { text-align: center; }
+.stat .n { font-size: 22px; font-weight: 700; color: #4fc3f7; }
+.stat .l { font-size: 11px; color: #7ab; margin-top: 2px; }
+.progress-overview { display: flex; align-items: center; gap: 10px; }
+.progress-overview .label { font-size: 12px; color: #7ab; white-space: nowrap; }
+.progress-overview .bar { flex: 1; height: 6px; background: #0f1923; border-radius: 3px; overflow: hidden; }
+.progress-overview .fill { height: 100%; background: linear-gradient(90deg, #00897b, #4fc3f7); border-radius: 3px; }
+.progress-overview .pct { font-size: 12px; color: #4fc3f7; font-weight: 600; white-space: nowrap; }
+
+/* ── 快速操作 ── */
+.section { padding: 16px; }
+.section-title { font-size: 14px; color: #7ab; margin-bottom: 12px; font-weight: 500; }
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tool-card { background: #1a2535; border-radius: 14px; padding: 18px 14px; cursor: pointer; transition: all 0.2s; border: 1px solid #1e3040; display: flex; flex-direction: column; gap: 8px; }
+.tool-card:active { background: #1e3045; transform: scale(0.98); }
+.tool-card .icon { font-size: 28px; margin-bottom: 2px; }
+.tool-card .name { font-size: 14px; font-weight: 600; color: #fff; }
+.tool-card .desc { font-size: 11px; color: #7ab; line-height: 1.4; }
+.tool-card .arrow { font-size: 14px; color: #4fc3f7; margin-top: auto; }
+
+/* 特色功能横幅 */
+.banner { margin: 0 16px 12px; background: linear-gradient(135deg, #0d3a4a, #0a2a38); border: 1px solid #1a5a7a; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.banner .icon { font-size: 24px; }
+.banner .text { flex: 1; }
+.banner .title { font-size: 13px; font-weight: 600; color: #4fc3f7; }
+.banner .sub { font-size: 11px; color: #7ab; margin-top: 2px; }
+
+/* 顶部Tab */
+.tabs { display: flex; gap: 0; padding: 0 16px; margin-bottom: 12px; }
+.tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; color: #7ab; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+.tab.active { background: #1a2535; color: #4fc3f7; font-weight: 600; }
+
+/* 项目列表 */
+.project-list { padding: 0 16px; }
+.project-card { background: #1a2535; border-radius: 12px; padding: 14px; margin-bottom: 10px; border-left: 3px solid #2a3a4a; }
+.project-card.p-active { border-left-color: #00897b; }
+.project-card.p-grid { border-left-color: #ffa726; }
+.project-card.p-done { border-left-color: #4fc3f7; }
+.project-card .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.project-card .name { font-size: 14px; font-weight: 600; color: #fff; }
+.project-card .badge { font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+.b-active { background: #e8f5e9; color: #2e7d32; }
+.b-construct { background: #fff3e0; color: #e65100; }
+.b-grid { background: #e3f2fd; color: #1565c0; }
+.b-closer { background: #fce4ec; color: #880e4f; }
+.project-card .meta { font-size: 12px; color: #7ab; margin-bottom: 8px; }
+.progress-bar { height: 4px; background: #0f1923; border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: #00897b; border-radius: 2px; transition: width 0.3s; }
+.project-card .footer { display: flex; justify-content: space-between; font-size: 11px; color: #7ab; margin-top: 6px; }
+
+/* 底部导航 */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #111d2a; border-top: 1px solid #1e3040; display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 4px; color: #5a7a8a; text-decoration: none; cursor: pointer; transition: color 0.2s; gap: 3px; }
+.nav-item.active { color: #4fc3f7; }
+.nav-item .icon { font-size: 22px; }
+.nav-item .label { font-size: 10px; }
+
+/* ── PC 端布局 ── */
+@media (min-width: 768px) {
+  .app-shell { max-width: 480px; margin: 0 auto; background: #0a1628; min-height: 100vh; }
+  .bottom-nav { max-width: 480px; left: 50%; transform: translateX(-50%); }
+  .header { padding: 32px 24px 56px; }
+  .overview { margin: -36px 20px 20px; }
+  .tools-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .tool-card { padding: 22px 18px; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- 首页 -->
+  <div id="page-home">
+    <div class="header">
+      <div class="user-badge">👤 admin</div>
+      <div class="logo">⚡ 鑫科新能源 ERP</div>
+      <div class="sub">光伏企业全链路数字化管理平台</div>
+    </div>
+
+    <div class="overview">
+      <div class="stats" id="statsRow"></div>
+      <div class="progress-overview">
+        <div class="label">年度目标达成</div>
+        <div class="bar"><div class="fill" id="targetFill" style="width:0%"></div></div>
+        <div class="pct" id="targetPct">0%</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🎯 核心功能</div>
+      <div class="tools-grid">
+        <div class="tool-card" onclick="goto('investment-calculator')">
+          <div class="icon">📊</div>
+          <div class="name">投决计算器</div>
+          <div class="desc">IRR · 回本年限 · 现金流图</div>
+          <div class="arrow">→</div>
+        </div>
+        <div class="tool-card" onclick="goto('department-targets')">
+          <div class="icon">🎯</div>
+          <div class="name">部门目标</div>
+          <div class="desc">年/季/月目标 · 达成率</div>
+          <div class="arrow">→</div>
+        </div>
+        <div class="tool-card" onclick="goto('construction/daily-reports')">
+          <div class="icon">📋</div>
+          <div class="name">施工日报</div>
+          <div class="desc">拍照上传 · 自动生成报告</div>
+          <div class="arrow">→</div>
+        </div>
+        <div class="tool-card" onclick="goto('construction/rectifications')">
+          <div class="icon">⚠️</div>
+          <div class="name">整改单</div>
+          <div class="desc">巡检问题 · 整改闭环</div>
+          <div class="arrow">→</div>
+        </div>
+        <div class="tool-card" onclick="goto('projects')">
+          <div class="icon">🏗️</div>
+          <div class="name">项目管理</div>
+          <div class="desc">项目列表 · 成本台账</div>
+          <div class="arrow">→</div>
+        </div>
+        <div class="tool-card" onclick="goto('electricity')">
+          <div class="icon">⚡</div>
+          <div class="name">电费结算</div>
+          <div class="desc">账单管理 · 应收款追踪</div>
+          <div class="arrow">→</div>
+        </div>
+        <div class="tool-card" onclick="goto('dashboard')">
+          <div class="icon">📈</div>
+          <div class="name">资金看板</div>
+          <div class="desc">收支趋势 · 垫资排行</div>
+          <div class="arrow">→</div>
+        </div>
+        <div class="tool-card" onclick="goto('worker')">
+          <div class="icon">👷</div>
+          <div class="name">班组小程序</div>
+          <div class="desc">手机端 · 外部班组入口</div>
+          <div class="arrow">→</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📁 进行中项目</div>
+    </div>
+    <div class="project-list" id="projectList"></div>
+    <div style="height: 80px;"></div>
+  </div>
+
+  <!-- 底部导航 -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="navigate('home')">
+      <div class="icon">🏠</div><div class="label">首页</div>
+    </div>
+    <div class="nav-item" onclick="navigate('projects')">
+      <div class="icon">📁</div><div class="label">项目</div>
+    </div>
+    <div class="nav-item" onclick="navigate('reports')">
+      <div class="icon">📋</div><div class="label">日报</div>
+    </div>
+    <div class="nav-item" onclick="navigate('calc')">
+      <div class="icon">📊</div><div class="label">工具</div>
+    </div>
+    <div class="nav-item" onclick="navigate('more')">
+      <div class="icon">⋯</div><div class="label">更多</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── 加载看板数据 ──
+async function loadDashboard() {
+  const res = await fetch("/api/dashboard/summary");
+  const d = await res.json();
+  document.getElementById("statsRow").innerHTML = `
+    <div class="stat"><div class="n">${d.total_projects || 0}</div><div class="l">项目数</div></div>
+    <div class="stat"><div class="n">${((d.total_cap||0)/1000).toFixed(1)}</div><div class="l">MW</div></div>
+    <div class="stat"><div class="n">${d.grid_projects || 0}</div><div class="l">并网</div></div>
+  `;
+  const pct = d.income > 0 ? Math.min(100, Math.round((d.income - d.expense) / d.income * 100)) : 0;
+  document.getElementById("targetFill").style.width = pct + "%";
+  document.getElementById("targetPct").textContent = pct + "%";
+}
+
+// ── 加载项目列表 ──
+async function loadProjects() {
+  const res = await fetch("/api/projects");
+  const projects = await res.json();
+  const active = projects.filter(p => ["施工", "签约", "并网"].includes(p.status));
+  const statusMap = {
+    "施工": { cls: "b-construct", label: "施工中" },
+    "签约": { cls: "b-closer", label: "已签约" },
+    "并网": { cls: "b-grid", label: "已并网" },
+    "商机": { cls: "b-active", label: "商机" },
+  };
+  const borderMap = {
+    "施工": "p-active", "签约": "p-closer", "并网": "p-grid"
+  };
+  document.getElementById("projectList").innerHTML = (active.length ? active : projects.slice(0,5)).map(p => {
+    const s = statusMap[p.status] || statusMap["施工"];
+    return `<div class="project-card ${borderMap[p.status] || ''}" onclick="goto('projects/${p.id}')">
+      <div class="row">
+        <div class="name">${p.name}</div>
+        <span class="badge ${s.cls}">${s.label}</span>
+      </div>
+      <div class="meta">${p.owner_name || ""} &nbsp; ${p.capacity_kw || 0} kW &nbsp; ${p.address || ""}</div>
+      ${p.status === "施工" && p.paid_amount ? `
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100, Math.round(p.paid_amount/p.total_invest*100))}%"></div></div>
+      <div class="footer"><span>已投 ${p.paid_amount} 万 / ${p.total_invest} 万</span><span>${Math.round(p.paid_amount/p.total_invest*100)}%</span></div>
+      ` : ""}
+    </div>`;
+  }).join("");
+}
+
+// ── 导航 ──
+function goto(url) { location.href = "/" + url; }
+
+function navigate(page) {
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+  if (page === "home") scrollTo(0,0);
+  if (page === "projects") goto("projects");
+  if (page === "reports") goto("construction/daily-reports");
+  if (page === "calc") goto("investment-calculator");
+  if (page === "more") {
+    document.getElementById("page-home").scrollIntoView();
+  }
+}
+
+// ── Init ──
+loadDashboard();
+loadProjects();
+
+// Register PWA service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/sw.js').then(() => {
+    console.log('PWA SW registered');
+  }).catch(e => console.log('SW error', e));
+}
+</script>

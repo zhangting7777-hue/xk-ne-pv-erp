@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>施工日报 — 鑫科新能源</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'PingFang SC', sans-serif; background: #0f1923; color: #e8eaed; }
+.header { background: #1a2535; border-bottom: 1px solid #2a3a4a; padding: 14px 24px; display: flex; gap: 16px; align-items: center; }
+.header h1 { font-size: 17px; font-weight: 600; }
+.nav { background: #1a2535; border-bottom: 1px solid #2a3a4a; padding: 0 24px; display: flex; gap: 4px; }
+.nav a { padding: 10px 16px; color: #7ab; text-decoration: none; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.nav a:hover, .nav a.active { color: #4fc3f7; border-bottom-color: #4fc3f7; }
+.main { max-width: 1100px; margin: 24px auto; padding: 0 24px; }
+
+.toolbar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+.toolbar select, .toolbar input { padding: 8px 12px; background: #1a2535; border: 1px solid #2a3a4a; border-radius: 6px; color: #e8eaed; font-size: 14px; }
+.btn { padding: 8px 16px; background: #00897b; border: none; border-radius: 6px; color: #fff; font-size: 13px; cursor: pointer; }
+.btn:hover { opacity: 0.9; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-primary { background: linear-gradient(135deg, #00897b, #00695c); }
+.btn-danger { background: #c62828; }
+.btn-warning { background: #e65100; }
+
+/* Card list */
+.card { background: #1a2535; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.card-title { font-size: 15px; font-weight: 600; color: #fff; }
+.card-meta { font-size: 12px; color: #7ab; margin-top: 4px; }
+.card-status { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.s-pending { background: #3a2a1a; color: #ffa726; }
+.s-sent { background: #1a3a2a; color: #4caf50; }
+.s-done { background: #1a2a3a; color: #4fc3f7; }
+
+.progress-bar { height: 6px; background: #0f1923; border-radius: 3px; margin: 8px 0; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #00897b, #4fc3f7); border-radius: 3px; transition: width 0.3s; }
+.progress-text { font-size: 12px; color: #7ab; }
+
+.photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.photo-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid #2a3a4a; }
+.photo-thumb:hover { border-color: #4fc3f7; }
+
+.content-text { font-size: 13px; color: #c8d8e0; line-height: 1.7; white-space: pre-wrap; margin-top: 8px; }
+
+.weather-tag { display: inline-block; padding: 2px 8px; background: #1e3a5f; border-radius: 4px; font-size: 12px; color: #8ab4c4; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay.open { display: flex; }
+.modal { background: #1a2535; border-radius: 12px; padding: 28px; width: 580px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 12px; color: #7ab; }
+.form-group input, .form-group select, .form-group textarea { padding: 8px 12px; background: #0f1923; border: 1px solid #2a3a4a; border-radius: 6px; color: #e8eaed; font-size: 14px; }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+.photo-upload-area { border: 2px dashed #2a3a4a; border-radius: 8px; padding: 20px; text-align: center; color: #7ab; cursor: pointer; font-size: 13px; }
+.photo-upload-area:hover { border-color: #4fc3f7; color: #4fc3f7; }
+.preview-photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.preview-item { position: relative; }
+.preview-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; }
+.preview-item .del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #c62828; border-radius: 50%; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+.empty { text-align: center; padding: 60px; color: #7ab; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 施工日报管理</h1>
+</div>
+<div class="nav">
+  <a href="#" onclick="showTab('list')" class="active" id="tab-list">日报列表</a>
+  <a href="#" onclick="showTab('new')" id="tab-new">新建日报</a>
+  <a href="/construction/rectifications">⚠️ 整改单</a>
+  <a href="/investment-calculator">📊 投决计算器</a>
+</div>
+
+<div class="main">
+  <!-- 工具栏 -->
+  <div class="toolbar" id="toolbar">
+    <select id="filterProject" onchange="loadReports()">
+      <option value="">全部项目</option>
+    </select>
+    <select id="filterStatus" onchange="loadReports()">
+      <option value="">全部状态</option>
+      <option value="待发送">待发送</option>
+      <option value="已发送">已发送</option>
+    </select>
+    <button class="btn btn-primary" onclick="openNewModal()">+ 新建日报</button>
+  </div>
+
+  <!-- 日报列表 -->
+  <div id="reportList"></div>
+</div>
+
+<!-- 新建/编辑弹窗 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">新建施工日报</div>
+    <input type="hidden" id="editId">
+    <div class="form-row">
+      <div class="form-group">
+        <label>项目</label>
+        <select id="fProject" required></select>
+      </div>
+      <div class="form-group">
+        <label>日期</label>
+        <input type="date" id="fDate">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>天气</label>
+        <select id="fWeather">
+          <option value="晴">晴 ☀️</option>
+          <option value="多云">多云 ⛅</option>
+          <option value="阴">阴 🌥️</option>
+          <option value="雨">雨 🌧️</option>
+          <option value="雷阵雨">雷阵雨 ⛈️</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>施工人员</label>
+        <input type="text" id="fBuilder" placeholder="班组/人员姓名">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>施工进度 (%)</label>
+      <input type="range" id="fProgress" min="0" max="100" value="0" oninput="document.getElementById('progressLabel').textContent=this.value+'%'">
+      <span id="progressLabel" style="font-size:12px;color:#4fc3f7;float:right;">0%</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width:0%"></div></div>
+    </div>
+    <div class="form-group">
+      <label>今日工作内容</label>
+      <textarea id="fContent" placeholder="描述今日施工内容、工作完成情况、明日计划..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>现场照片（可多选）</label>
+      <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+        📷 点击上传照片（支持多张）
+      </div>
+      <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(this)">
+      <div class="preview-photos" id="previewPhotos"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitReport()">保存日报</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let reports = [];
+let selectedPhotos = [];
+let editingId = null;
+
+async function init() {
+  // 加载项目下拉
+  const pRes = await fetch("/api/projects");
+  const projects = await pRes.json();
+  const opts = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+  document.getElementById("filterProject").innerHTML = '<option value="">全部项目</option>' + opts;
+  document.getElementById("fProject").innerHTML = opts;
+  loadReports();
+}
+
+async function loadReports() {
+  const pid = document.getElementById("filterProject").value;
+  const status = document.getElementById("filterStatus").value;
+  const url = "/api/daily-reports" + (pid ? "?project_id=" + pid : "");
+  const res = await fetch(url);
+  let list = await res.json();
+  if (status) list = list.filter(r => r.status === status);
+  renderReports(list);
+}
+
+function renderReports(list) {
+  const el = document.getElementById("reportList");
+  if (!list.length) {
+    el.innerHTML = '<div class="empty">暂无日报记录<br><br><button class="btn btn-primary" onclick="openNewModal()">+ 新建第一条日报</button></div>';
+    return;
+  }
+  el.innerHTML = list.map(r => `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${r.project_name || "未知项目"}</div>
+          <div class="card-meta">${r.report_date} &nbsp; ${r.weather || ""} &nbsp; ${r.builder_name || ""}</div>
+        </div>
+        <span class="card-status ${r.status === "待发送" ? "s-pending" : r.status === "已发送" ? "s-sent" : "s-done"}">${r.status}</span>
+      </div>
+      <div style="font-size:12px;color:#7ab;margin-bottom:6px;">施工进度</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${r.progress_percent}%"></div></div>
+      <div class="progress-text">${r.progress_percent}%</div>
+      <div class="content-text">${r.content || ""}</div>
+      ${r.photos && r.photos.length ? `<div class="photos">${r.photos.map(p => `<img src="${p}" class="photo-thumb" onclick="window.open('${p}')">`).join("")}</div>` : ""}
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        ${r.status === "待发送" ? `<button class="btn btn-sm btn-primary" onclick="sendReport(${r.id})">发送客户</button>` : ""}
+        <button class="btn btn-sm" onclick="editReport(${r.id})">编辑</button>
+        <button class="btn btn-sm btn-danger" onclick="delReport(${r.id})">删除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function showTab(tab) {
+  document.querySelectorAll(".nav a").forEach(a => a.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+}
+
+function openNewModal() {
+  editingId = null;
+  selectedPhotos = [];
+  document.getElementById("modalTitle").textContent = "新建施工日报";
+  document.getElementById("editId").value = "";
+  document.getElementById("fDate").value = new Date().toISOString().split("T")[0];
+  document.getElementById("fBuilder").value = "";
+  document.getElementById("fProgress").value = 0;
+  document.getElementById("progressLabel").textContent = "0%";
+  document.getElementById("progressBar").style.width = "0%";
+  document.getElementById("fContent").value = "";
+  document.getElementById("previewPhotos").innerHTML = "";
+  document.getElementById("modal").classList.add("open");
+}
+
+function editReport(id) {
+  const r = reports.find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  document.getElementById("modalTitle").textContent = "编辑施工日报";
+  document.getElementById("editId").value = id;
+  document.getElementById("fProject").value = r.project_id || "";
+  document.getElementById("fDate").value = r.report_date || "";
+  document.getElementById("fWeather").value = r.weather || "晴";
+  document.getElementById("fBuilder").value = r.builder_name || "";
+  document.getElementById("fProgress").value = r.progress_percent || 0;
+  document.getElementById("progressLabel").textContent = (r.progress_percent || 0) + "%";
+  document.getElementById("progressBar").style.width = (r.progress_percent || 0) + "%";
+  document.getElementById("fContent").value = r.content || "";
+  selectedPhotos = r.photos || [];
+  renderPreviews();
+  document.getElementById("modal").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modal").classList.remove("open");
+}
+
+function handlePhotoSelect(input) {
+  for (const f of input.files) {
+    const reader = new FileReader();
+    reader.onload = e => { selectedPhotos.push(e.target.result); renderPreviews(); };
+    reader.readAsDataURL(f);
+  }
+}
+
+function renderPreviews() {
+  document.getElementById("previewPhotos").innerHTML = selectedPhotos.map((p, i) => `
+    <div class="preview-item">
+      <img src="${p}">
+      <span class="del" onclick="removePhoto(${i})">✕</span>
+    </div>
+  `).join("");
+}
+
+function removePhoto(i) { selectedPhotos.splice(i, 1); renderPreviews(); }
+
+async function submitReport() {
+  const payload = {
+    project_id: parseInt(document.getElementById("fProject").value),
+    report_date: document.getElementById("fDate").value,
+    weather: document.getElementById("fWeather").value,
+    builder_name: document.getElementById("fBuilder").value,
+    progress_percent: parseInt(document.getElementById("fProgress").value),
+    content: document.getElementById("fContent").value,
+    photos: selectedPhotos,
+    status: "待发送"
+  };
+  const id = document.getElementById("editId").value;
+  const method = id ? "PUT" : "POST";
+  const url = id ? `/api/daily-reports/${id}` : "/api/daily-reports";
+  await fetch(url, { method, headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+  closeModal();
+  loadReports();
+}
+
+async function sendReport(id) {
+  await fetch(`/api/daily-reports/${id}`, {
+    method: "PUT", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ status: "已发送" })
+  });
+  loadReports();
+}
+
+async function delReport(id) {
+  if (!confirm("删除该日报？")) return;
+  await fetch(`/api/daily-reports/${id}`, { method: "DELETE" });
+  loadReports();
+}
+
+// Progress bar live update
+document.getElementById("fProgress")?.addEventListener("input", function() {
+  document.getElementById("progressLabel").textContent = this.value + "%";
+  document.getElementById("progressBar").style.width = this.value + "%";
+});
+
+init();
+</script>
+</body>
+</html>

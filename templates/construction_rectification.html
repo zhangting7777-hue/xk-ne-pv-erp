@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>施工整改单 — 鑫科新能源</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'PingFang SC', sans-serif; background: #0f1923; color: #e8eaed; }
+.header { background: #1a2535; border-bottom: 1px solid #2a3a4a; padding: 14px 24px; }
+.header h1 { font-size: 17px; font-weight: 600; }
+.nav { background: #1a2535; border-bottom: 1px solid #2a3a4a; padding: 0 24px; display: flex; gap: 4px; }
+.nav a { padding: 10px 16px; color: #7ab; text-decoration: none; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.nav a:hover, .nav a.active { color: #4fc3f7; border-bottom-color: #4fc3f7; }
+.main { max-width: 1100px; margin: 24px auto; padding: 0 24px; }
+.toolbar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+.toolbar select { padding: 8px 12px; background: #1a2535; border: 1px solid #2a3a4a; border-radius: 6px; color: #e8eaed; font-size: 14px; }
+.btn { padding: 8px 16px; background: #00897b; border: none; border-radius: 6px; color: #fff; font-size: 13px; cursor: pointer; }
+.btn:hover { opacity: 0.9; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger { background: #c62828; }
+.btn-warning { background: #e65100; }
+.btn-done { background: #2e7d32; }
+
+.card { background: #1a2535; border-radius: 10px; padding: 20px; margin-bottom: 16px; border-left: 4px solid transparent; }
+.card-urgent { border-left-color: #ef5350; }
+.card-normal { border-left-color: #ffa726; }
+.card-done { border-left-color: #4caf50; }
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.card-title { font-size: 15px; font-weight: 600; color: #fff; }
+.card-meta { font-size: 12px; color: #7ab; margin-top: 4px; }
+.severity-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.sev-serious { background: #3a1a1a; color: #ef5350; }
+.sev-normal { background: #3a2a1a; color: #ffa726; }
+.sev-light { background: #1a3a2a; color: #4caf50; }
+.status-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; }
+.st-pending { background: #3a2a1a; color: #ffa726; }
+.st-done { background: #1a3a2a; color: #4caf50; }
+.st-overdue { background: #3a1a1a; color: #ef5350; }
+
+.content-text { font-size: 13px; color: #c8d8e0; line-height: 1.7; white-space: pre-wrap; margin: 8px 0; }
+.photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.photo-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid #2a3a4a; }
+.photo-thumb:hover { border-color: #4fc3f7; }
+.tag { display: inline-block; padding: 2px 8px; background: #1e3a5f; border-radius: 4px; font-size: 12px; color: #8ab4c4; margin-right: 6px; }
+.actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay.open { display: flex; }
+.modal { background: #1a2535; border-radius: 12px; padding: 28px; width: 600px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 12px; color: #7ab; }
+.form-group input, .form-group select, .form-group textarea { padding: 8px 12px; background: #0f1923; border: 1px solid #2a3a4a; border-radius: 6px; color: #e8eaed; font-size: 14px; }
+.form-group textarea { resize: vertical; min-height: 70px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+.photo-upload-area { border: 2px dashed #2a3a4a; border-radius: 8px; padding: 16px; text-align: center; color: #7ab; cursor: pointer; font-size: 13px; }
+.photo-upload-area:hover { border-color: #4fc3f7; color: #4fc3f7; }
+.preview-photos { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.preview-item { position: relative; }
+.preview-item img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; }
+.preview-item .del { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; background: #c62828; border-radius: 50%; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+.empty { text-align: center; padding: 60px; color: #7ab; }
+
+/* Feedback section */
+.feedback-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid #2a3a4a; }
+.feedback-label { font-size: 12px; color: #4caf50; margin-bottom: 6px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header"><h1>⚠️ 施工整改单</h1></div>
+<div class="nav">
+  <a href="/construction/daily-reports">📋 施工日报</a>
+  <a href="#" class="active">⚠️ 整改单</a>
+  <a href="/investment-calculator">📊 投决计算器</a>
+</div>
+
+<div class="main">
+  <div class="toolbar">
+    <select id="filterProject" onchange="loadRectifications()">
+      <option value="">全部项目</option>
+    </select>
+    <select id="filterStatus" onchange="loadRectifications()">
+      <option value="">全部状态</option>
+      <option value="待整改">待整改</option>
+      <option value="已完成">已完成</option>
+      <option value="已逾期">已逾期</option>
+    </select>
+    <select id="filterSeverity" onchange="loadRectifications()">
+      <option value="">全部等级</option>
+      <option value="严重">严重</option>
+      <option value="一般">一般</option>
+      <option value="轻微">轻微</option>
+    </select>
+    <button class="btn" onclick="openNewRect()">+ 新建整改单</button>
+  </div>
+  <div id="rectList"></div>
+</div>
+
+<!-- 新建整改单弹窗 -->
+<div class="modal-overlay" id="modalNew">
+  <div class="modal">
+    <div class="modal-title" id="modalTitleNew">新建整改单</div>
+    <input type="hidden" id="editId">
+    <div class="form-row">
+      <div class="form-group">
+        <label>关联项目</label>
+        <select id="fProject"></select>
+      </div>
+      <div class="form-group">
+        <label>严重程度</label>
+        <select id="fSeverity">
+          <option value="轻微">轻微</option>
+          <option value="一般" selected>一般</option>
+          <option value="严重">严重</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>整改标题</label>
+      <input type="text" id="fTitle" placeholder="如：支架安装不平整，需重新校正">
+    </div>
+    <div class="form-group">
+      <label>问题描述</label>
+      <textarea id="fDesc" placeholder="详细描述发现的问题..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>整改期限</label>
+        <input type="date" id="fDueDate">
+      </div>
+      <div class="form-group">
+        <label>负责人</label>
+        <input type="text" id="fAssigned" placeholder="施工班组/人员">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>问题照片</label>
+      <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">📷 点击上传问题照片</div>
+      <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(this)">
+      <div class="preview-photos" id="previewPhotos"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-warning" onclick="submitRect()">提交整改单</button>
+    </div>
+  </div>
+</div>
+
+<!-- 整改反馈弹窗 -->
+<div class="modal-overlay" id="modalFeedback">
+  <div class="modal">
+    <div class="modal-title">整改反馈</div>
+    <input type="hidden" id="feedbackId">
+    <div class="form-group">
+      <label>整改完成说明</label>
+      <textarea id="fFeedback" placeholder="描述整改完成情况..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>整改后照片</label>
+      <div class="photo-upload-area" onclick="document.getElementById('feedbackPhotoInput').click()">📷 上传整改后照片</div>
+      <input type="file" id="feedbackPhotoInput" accept="image/*" multiple style="display:none" onchange="handleFeedbackPhotoSelect(this)">
+      <div class="preview-photos" id="feedbackPreviewPhotos"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('modalFeedback').classList.remove('open')">取消</button>
+      <button class="btn btn-done" onclick="submitFeedback()">确认完成</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let rectifications = [];
+let selectedPhotos = [];
+let feedbackPhotos = [];
+
+async function init() {
+  const pRes = await fetch("/api/projects");
+  const projects = await pRes.json();
+  const opts = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+  document.getElementById("filterProject").innerHTML = '<option value="">全部项目</option>' + opts;
+  document.getElementById("fProject").innerHTML = opts;
+  loadRectifications();
+}
+
+async function loadRectifications() {
+  const pid = document.getElementById("filterProject").value;
+  const status = document.getElementById("filterStatus").value;
+  const sev = document.getElementById("filterSeverity").value;
+  let url = "/api/rectifications";
+  const params = [];
+  if (pid) params.push("project_id=" + pid);
+  if (params.length) url += "?" + params.join("&");
+  const res = await fetch(url);
+  let list = await res.json();
+  if (status) list = list.filter(r => r.status === status || (status === "已逾期" && isOverdue(r)));
+  if (sev) list = list.filter(r => r.severity === sev);
+  rectifications = list;
+  render(list);
+}
+
+function isOverdue(r) {
+  return r.status === "待整改" && r.due_date && r.due_date < new Date().toISOString().split("T")[0];
+}
+
+function render(list) {
+  const el = document.getElementById("rectList");
+  if (!list.length) { el.innerHTML = '<div class="empty">暂无整改单</div>'; return; }
+  el.innerHTML = list.map(r => {
+    const sev = r.severity || "一般";
+    const sevClass = sev === "严重" ? "sev-serious" : sev === "一般" ? "sev-normal" : "sev-light";
+    const cardClass = r.status === "已完成" ? "card-done" : isOverdue(r) ? "card-urgent" : "card-normal";
+    const statusClass = r.status === "已完成" ? "st-done" : isOverdue(r) ? "st-overdue" : "st-pending";
+    return `
+    <div class="card ${cardClass}">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${r.rect_title || "整改单"} <span class="severity-badge ${sevClass}">${sev}</span></div>
+          <div class="card-meta">
+            ${r.project_name || ""} &nbsp;
+            ${r.due_date ? "截止：" + r.due_date : ""} &nbsp;
+            负责人：${r.assigned_to || ""}
+          </div>
+        </div>
+        <span class="status-badge ${statusClass}">${r.status === "待整改" && isOverdue(r) ? "已逾期" : r.status}</span>
+      </div>
+      <div class="content-text">${r.rect_desc || ""}</div>
+      ${r.photos && r.photos.length ? `<div class="photos">${r.photos.map(p => `<img src="${p}" class="photo-thumb" onclick="window.open('${p}')">`).join("")}</div>` : ""}
+      ${r.整改_feedback ? `<div class="feedback-section">
+        <div class="feedback-label">✅ 整改反馈</div>
+        <div class="content-text">${r.整改_feedback}</div>
+        ${r.feedback_photos && r.feedback_photos.length ? `<div class="photos">${r.feedback_photos.map(p => `<img src="${p}" class="photo-thumb" onclick="window.open('${p}')">`).join("")}</div>` : ""}
+      </div>` : ""}
+      <div class="actions">
+        ${r.status === "待整改" ? `<button class="btn btn-done btn-sm" onclick="openFeedback(${r.id})">✓ 整改完成</button>` : ""}
+        <button class="btn btn-sm btn-danger" onclick="delRect(${r.id})">删除</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function openNewRect() {
+  selectedPhotos = [];
+  document.getElementById("editId").value = "";
+  document.getElementById("fTitle").value = "";
+  document.getElementById("fDesc").value = "";
+  document.getElementById("fDueDate").value = "";
+  document.getElementById("fAssigned").value = "";
+  document.getElementById("previewPhotos").innerHTML = "";
+  document.getElementById("modalTitleNew").textContent = "新建整改单";
+  document.getElementById("modalNew").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modalNew").classList.remove("open");
+  document.getElementById("modalFeedback").classList.remove("open");
+}
+
+function handlePhotoSelect(input) {
+  for (const f of input.files) {
+    const reader = new FileReader();
+    reader.onload = e => { selectedPhotos.push(e.target.result); renderPreviews(); };
+    reader.readAsDataURL(f);
+  }
+}
+
+function handleFeedbackPhotoSelect(input) {
+  for (const f of input.files) {
+    const reader = new FileReader();
+    reader.onload = e => { feedbackPhotos.push(e.target.result); renderFeedbackPreviews(); };
+    reader.readAsDataURL(f);
+  }
+}
+
+function renderPreviews() {
+  document.getElementById("previewPhotos").innerHTML = selectedPhotos.map((p, i) => `
+    <div class="preview-item"><img src="${p}"><span class="del" onclick="removePhoto(${i})">✕</span></div>
+  `).join("");
+}
+
+function renderFeedbackPreviews() {
+  document.getElementById("feedbackPreviewPhotos").innerHTML = feedbackPhotos.map((p, i) => `
+    <div class="preview-item"><img src="${p}"><span class="del" onclick="removeFeedbackPhoto(${i})">✕</span></div>
+  `).join("");
+}
+
+function removePhoto(i) { selectedPhotos.splice(i, 1); renderPreviews(); }
+function removeFeedbackPhoto(i) { feedbackPhotos.splice(i, 1); renderFeedbackPreviews(); }
+
+async function submitRect() {
+  const payload = {
+    project_id: parseInt(document.getElementById("fProject").value),
+    rect_title: document.getElementById("fTitle").value,
+    rect_desc: document.getElementById("fDesc").value,
+    severity: document.getElementById("fSeverity").value,
+    due_date: document.getElementById("fDueDate").value,
+    assigned_to: document.getElementById("fAssigned").value,
+    photos: selectedPhotos
+  };
+  await fetch("/api/rectifications", {
+    method: "POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)
+  });
+  closeModal();
+  loadRectifications();
+}
+
+function openFeedback(id) {
+  feedbackPhotos = [];
+  document.getElementById("feedbackId").value = id;
+  document.getElementById("fFeedback").value = "";
+  document.getElementById("feedbackPreviewPhotos").innerHTML = "";
+  document.getElementById("modalFeedback").classList.add("open");
+}
+
+async function submitFeedback() {
+  const id = parseInt(document.getElementById("feedbackId").value);
+  await fetch(`/api/rectifications/${id}`, {
+    method: "PUT", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      status: "已完成",
+      整改_feedback: document.getElementById("fFeedback").value,
+      feedback_photos: feedbackPhotos
+    })
+  });
+  closeModal();
+  loadRectifications();
+}
+
+async function delRect(id) {
+  if (!confirm("删除该整改单？")) return;
+  await fetch(`/api/rectifications/${id}`, { method: "DELETE" });
+  loadRectifications();
+}
+
+init();
+</script>
+</body>
+</html>
